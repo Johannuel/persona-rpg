@@ -52,7 +52,7 @@ fn caja_fila(texto: &str) -> String {
 fn fila_sprite(fila: &str, extra: &str) -> String {
     texto_margen(&format!(
         "│ {:<width$} │",
-        format!("{}    {}", fila, extra),
+        format!("{}  {}", fila, extra),
         width = ANCHO_INTERIOR
     ))
 }
@@ -90,102 +90,137 @@ fn color_mp(porcentaje: f32) -> Color {
 }
 
 fn sprite_art(filas: [&str; 5]) -> Vec<String> {
-    filas.iter().map(|f| format!("{:<16}", f)).collect()
+    filas.iter().map(|f| format!("{:<22}", f)).collect()
+}
+
+fn sprite_color_enemigo(nombre: &str) -> Color {
+    match nombre.split(" Lv.").next().unwrap_or(nombre) {
+        "Jack Frost" => Color::Cyan,
+        "Pyro Jack" => Color::Red,
+        "Pixie" => Color::Magenta,
+        "Cowardly Maya" => Color::DarkGrey,
+        "Belligerent Maya" => Color::Red,
+        "Laughing Table" => Color::DarkYellow,
+        "Black Raven" => Color::DarkGrey,
+        "Maniac Book" => Color::DarkMagenta,
+        "Naga" => Color::Green,
+        "Succubus" => Color::Magenta,
+        "Chimera" => Color::Yellow,
+        "Weeping Tiara" => Color::Cyan,
+        "Lilim" => Color::Yellow,
+        _ => Color::DarkGrey,
+    }
+}
+
+fn sprite_color_persona(persona: &str) -> Color {
+    match persona {
+        "Jack Frost" => Color::Cyan,
+        "Pyro Jack" => Color::Red,
+        "Pixie" => Color::Magenta,
+        _ => Color::White,
+    }
 }
 
 fn sprite_enemigo(nombre: &str) -> Vec<String> {
     let base = nombre.split(" Lv.").next().unwrap_or(nombre);
     match base {
         "Jack Frost" => sprite_art([
-            "    ______     ",
-            "   / o  o \\    ",
-            "   |  ^^  |    ",
-            "    \\  __  /    ",
-            "     \\____/     ",
+            "       /\\",
+            "      /--\\",
+            "     |o  o |",
+            "     |  ⌄  |",
+            "      \\___/",
         ]),
         "Pyro Jack" => sprite_art([
-            "    _    _     ",
-            "   (o)  (o)    ",
-            "   (   ^  )    ",
-            "    \\____/     ",
-            "    /|  |\\     ",
+            "      /\\",
+            "     /--\\",
+            "    |o o o|",
+            "    |_^^^_|",
+            "     /|||\\",
         ]),
         "Pixie" => sprite_art([
-            "   /\\   /\\     ",
-            "  ( o ) ( o )  ",
-            "   \\_/   \\_/   ",
-            "    |  *  |    ",
-            "    |     |    ",
+            "    /\\    /\\",
+            "   ( o ) ( o )",
+            "    \\  ⌄  /",
+            "   (_______)",
+            "     |  |",
         ]),
-        "Cowardly Maya" | "Belligerent Maya" => sprite_art([
-            "   ________   ",
-            "  /  o  o  \\  ",
-            " |   ~ ~    | ",
-            "  \\  ___  /   ",
-            "   '-----'    ",
+        "Cowardly Maya" => sprite_art([
+            "   .-------.",
+            "  (         )",
+            "  (    ?    )",
+            "   '-------'",
+            "    /  |  \\",
+        ]),
+        "Belligerent Maya" => sprite_art([
+            "   .-------.",
+            "  (         )",
+            "  (    !    )",
+            "   '-------'",
+            "    /  |  \\",
         ]),
         "Laughing Table" => sprite_art([
-            "   ________    ",
-            "  |  o  o  |   ",
-            "  |  ___   |   ",
-            "  |_______|    ",
-            "   |     |     ",
+            "  __________",
+            " |  o    o  |",
+            " | ⌄⌄  ⌄⌄⌄  |",
+            " |__________|",
+            "   |      |",
         ]),
         "Black Raven" => sprite_art([
-            "     ___       ",
-            "    (o o)>     ",
-            "     \\_/       ",
-            "   __/|\\__     ",
-            "  |  / \\  |    ",
+            "    ___",
+            "   (o o)>",
+            "    \\ ⌄ /",
+            "    |_|_|",
+            "   /  |  \\",
         ]),
         "Maniac Book" => sprite_art([
-            "  _________    ",
-            " |  o   o  |   ",
-            " |   ___   |   ",
-            " |_________|   ",
-            "    |   |      ",
+            "  ________",
+            " | o    o |",
+            " |   ⌄⌄   |",
+            " |________|",
+            "   ||   ||",
         ]),
         "Naga" => sprite_art([
-            "    ,~~~~~     ",
-            "   /   o o     ",
-            "  |      ^     ",
-            "   \\__/        ",
-            "   /|  |\\      ",
+            "  __(  )__",
+            " (  o  o  )",
+            " (   ⌄⌄   )",
+            " (________)",
+            "   /|  |\\",
         ]),
         "Succubus" => sprite_art([
-            "   \\__   __/   ",
-            "    ) o o (    ",
-            "   (   ^   )   ",
-            "    \\_____/    ",
-            "     /||\\      ",
+            "    /\\    /\\",
+            "   ( o  o )",
+            "   (  ⌄⌄  )",
+            "  /|_   _|\\",
+            " _/       \\_",
         ]),
         "Chimera" => sprite_art([
-            "    _______    ",
-            "   / o o  \\    ",
-            "  |  /\\    |   ",
-            "  | /  \\   |   ",
-            "   \\____/     ",
+            "     .--.",
+            "    (o  o)",
+            "    _⌄⌄⌄⌄_",
+            "   /|  |  |\\",
+            "  / |__|__| \\",
         ]),
         "Weeping Tiara" => sprite_art([
-            "   /\\   /\\   /\\ ",
-            "  /  \\ /  \\ /  \\",
-            "  |  o    o  | ",
-            "   \\   __  /  ",
-            "    \\______/  ",
+            "   /\\  /\\  /\\",
+            "  ( o    o )",
+            "   \\  ⌄⌄  /",
+            "  (  ~ ~  )",
+            "  (_______)",
         ]),
         "Lilim" => sprite_art([
-            "  /\\     /\\   ",
-            "  \\  \\  /  /   ",
-            "   ( o  o )   ",
-            "    \\____/    ",
-            "    |    |    ",
+            "  (\\/)   (\\/)",
+            "   o     o",
+            "  (  ⌄⌄  )",
+            "  (_______)",
+            "    / | \\",
         ]),
         _ => sprite_art([
-            "     _  _     ",
-            "    (o  o)    ",
-            "    (  v  )   ",
-            "     \\__/     ",
-            "    / |  \\    ",
+            "    .---.",
+            "   / o  o \\",
+            "   |  ⌄⌄  |",
+            "   |_____|",
+            "    / | \\",
         ]),
     }
 }
