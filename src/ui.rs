@@ -638,34 +638,31 @@ pub fn render_combate(estado: &EstadoCombate) {
     )));
     let _ = stdout.queue(ResetColor);
 
+    let color_sprite = sprite_color_enemigo(&enemigo.nombre);
     let sprite = sprite_enemigo(&enemigo.nombre);
     for (i, fila) in sprite.iter().enumerate() {
-        match i {
-            1 => {
-                let extra = format!(
-                    "HP {}  {}/{}",
-                    barra_str(enemigo.hp, enemigo.hp_max, 14),
-                    enemigo.hp,
-                    enemigo.hp_max
-                );
-                let _ = stdout.queue(SetForegroundColor(color_hp(
-                    enemigo.hp as f32 / enemigo.hp_max as f32,
-                )));
-                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
-                let _ = stdout.queue(ResetColor);
-            }
-            2 => {
-                let extra = format!(
-                    "Weak: {}  Resists: {}",
-                    etiquetas(&enemigo.debilidades),
-                    etiquetas(&enemigo.resistencias)
-                );
-                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
-            }
-            _ => {
-                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, ""))));
-            }
-        }
+        let color_fila = if i == 1 {
+            color_hp(enemigo.hp as f32 / enemigo.hp_max as f32)
+        } else {
+            color_sprite
+        };
+        let extra = match i {
+            1 => format!(
+                "HP {}  {}/{}",
+                barra_str(enemigo.hp, enemigo.hp_max, 14),
+                enemigo.hp,
+                enemigo.hp_max
+            ),
+            2 => format!(
+                "Weak: {}  Resists: {}",
+                etiquetas(&enemigo.debilidades),
+                etiquetas(&enemigo.resistencias)
+            ),
+            _ => String::new(),
+        };
+        let _ = stdout.queue(SetForegroundColor(color_fila));
+        let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
+        let _ = stdout.queue(ResetColor);
     }
 
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
@@ -681,47 +678,37 @@ pub fn render_combate(estado: &EstadoCombate) {
     )));
     let _ = stdout.queue(ResetColor);
 
+    let color_sprite = sprite_color_persona(&jugador.persona);
     let sprite_jugador = sprite_persona(&jugador.persona);
     for (i, fila) in sprite_jugador.iter().enumerate() {
-        match i {
-            1 => {
-                let extra = format!(
-                    "HP {}  {}/{}",
-                    barra_str(jugador.hp, jugador.hp_max, 14),
-                    jugador.hp,
-                    jugador.hp_max
-                );
-                let _ = stdout.queue(SetForegroundColor(color_hp(
-                    jugador.hp as f32 / jugador.hp_max as f32,
-                )));
-                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
-                let _ = stdout.queue(ResetColor);
-            }
-            2 => {
-                let extra = format!(
-                    "MP {}  {}/{}",
-                    barra_str(jugador.mp, jugador.mp_max, 14),
-                    jugador.mp,
-                    jugador.mp_max
-                );
-                let _ = stdout.queue(SetForegroundColor(color_mp(
-                    jugador.mp as f32 / jugador.mp_max as f32,
-                )));
-                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
-                let _ = stdout.queue(ResetColor);
-            }
-            3 => {
-                let extra = format!(
-                    "Weak: {}  Resists: {}",
-                    etiquetas(&jugador.debilidades),
-                    etiquetas(&jugador.resistencias)
-                );
-                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
-            }
-            _ => {
-                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, ""))));
-            }
-        }
+        let color_fila = match i {
+            1 => color_hp(jugador.hp as f32 / jugador.hp_max as f32),
+            2 => color_mp(jugador.mp as f32 / jugador.mp_max as f32),
+            _ => color_sprite,
+        };
+        let extra = match i {
+            1 => format!(
+                "HP {}  {}/{}",
+                barra_str(jugador.hp, jugador.hp_max, 14),
+                jugador.hp,
+                jugador.hp_max
+            ),
+            2 => format!(
+                "MP {}  {}/{}",
+                barra_str(jugador.mp, jugador.mp_max, 14),
+                jugador.mp,
+                jugador.mp_max
+            ),
+            3 => format!(
+                "Weak: {}  Resists: {}",
+                etiquetas(&jugador.debilidades),
+                etiquetas(&jugador.resistencias)
+            ),
+            _ => String::new(),
+        };
+        let _ = stdout.queue(SetForegroundColor(color_fila));
+        let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
+        let _ = stdout.queue(ResetColor);
     }
 
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
@@ -1008,11 +995,11 @@ pub fn render_game_over() {
 
     mover_contenido(&mut stdout, 12);
     let calavera = [
-        "    .--------.    ",
-        "   /  o    o  \\   ",
-        "  |    ----    |  ",
-        "   \\    --    /   ",
-        "    '--------'    ",
+        "     .-----.",
+        "    / o   o \\",
+        "   |   ⌄⌄   |",
+        "   | |   | |",
+        "   |_|___|_|",
     ];
     let _ = stdout.queue(SetForegroundColor(Color::Red));
     for fila in calavera {
