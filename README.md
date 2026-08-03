@@ -7,6 +7,10 @@ A turn-based RPG for the terminal, inspired by **Persona 3 Portable**. Fight sha
 
 Un RPG por turnos en la terminal inspirado en Persona 3 Portable. Combate, fusiona Personas y explora la Hora Oscura.
 
+## Demo
+
+<video src="videos/demo.mp4" controls></video>
+
 ## Features
 
 - **5 playable characters** — Makoto, Yukari, Junpei, Akihiko, Mitsuru, each with a signature Persona
