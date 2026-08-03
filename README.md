@@ -9,7 +9,7 @@ Un RPG por turnos en la terminal inspirado en Persona 3 Portable. Combate, fusio
 
 ## Demo
 
-<video src="https://raw.githubusercontent.com/Johannuel/persona-rpg/main/videos/demo.mp4" width="100%" controls></video>
+[Ver video demo (mp4)](https://raw.githubusercontent.com/Johannuel/persona-rpg/main/videos/demo.mp4)
 
 <img src="videos/demo.gif" alt="Demo del juego">
 
