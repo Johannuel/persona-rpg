@@ -7,34 +7,54 @@ use crossterm::{
     QueueableCommand,
 };
 use std::io::{self, Write};
+use std::sync::OnceLock;
 
 use crate::data::{fusionar, CartaShuffle, Efecto, Elemento, EstadoCombate, Personaje, Skill};
 
 const ANCHO: usize = 60;
 const ANCHO_INTERIOR: usize = ANCHO - 2;
+const ANCHO_TOTAL: usize = ANCHO + 2;
+
+fn margen_horizontal() -> usize {
+    static MARGEN: OnceLock<usize> = OnceLock::new();
+    *MARGEN.get_or_init(|| {
+        let (ancho, _) = terminal::size().unwrap_or((80, 24));
+        (ancho as usize).saturating_sub(ANCHO_TOTAL) / 2
+    })
+}
+
+fn texto_margen(linea: &str) -> String {
+    format!("{}{}", " ".repeat(margen_horizontal()), linea)
+}
+
+fn mover_contenido(stdout: &mut (impl Write + QueueableCommand), lineas: usize) {
+    let (_, alto) = terminal::size().unwrap_or((80, 24));
+    let y = (alto as usize).saturating_sub(lineas) / 2;
+    let _ = stdout.queue(cursor::MoveTo(0, y as u16));
+}
 
 fn caja_superior() -> String {
-    format!("┌{}┐", "─".repeat(ANCHO))
+    texto_margen(&format!("┌{}┐", "─".repeat(ANCHO)))
 }
 
 fn caja_medio() -> String {
-    format!("├{}┤", "─".repeat(ANCHO))
+    texto_margen(&format!("├{}┤", "─".repeat(ANCHO)))
 }
 
 fn caja_inferior() -> String {
-    format!("└{}┘", "─".repeat(ANCHO))
+    texto_margen(&format!("└{}┘", "─".repeat(ANCHO)))
 }
 
 fn caja_fila(texto: &str) -> String {
-    format!("│ {:<width$} │", texto, width = ANCHO_INTERIOR)
+    texto_margen(&format!("│ {:<width$} │", texto, width = ANCHO_INTERIOR))
 }
 
 fn fila_sprite(fila: &str, extra: &str) -> String {
-    format!(
+    texto_margen(&format!(
         "│ {:<width$} │",
         format!("{}    {}", fila, extra),
         width = ANCHO_INTERIOR
-    )
+    ))
 }
 
 pub fn limpiar_pantalla() {
@@ -290,7 +310,11 @@ const TORRE: [&str; 6] = [
 fn escena_nocturna(stdout: &mut (impl Write + QueueableCommand)) {
     for i in 0..6 {
         let _ = stdout.queue(SetForegroundColor(Color::Yellow));
-        let _ = stdout.queue(Print(LUNA[i]));
+        let _ = stdout.queue(Print(&format!(
+            "{}{}",
+            " ".repeat(margen_horizontal()),
+            LUNA[i]
+        )));
         let _ = stdout.queue(SetForegroundColor(Color::DarkGrey));
         let _ = stdout.queue(Print(&format!("  {}\r\n", TORRE[i])));
         let _ = stdout.queue(ResetColor);
@@ -309,7 +333,11 @@ fn luna_titulo(stdout: &mut (impl Write + QueueableCommand)) {
     ];
     let _ = stdout.queue(SetForegroundColor(Color::Yellow));
     for fila in luna {
-        let _ = stdout.queue(Print(&format!("{}\r\n", fila)));
+        let _ = stdout.queue(Print(&format!(
+            "{}{}\r\n",
+            " ".repeat(margen_horizontal()),
+            fila
+        )));
     }
     let _ = stdout.queue(ResetColor);
 }
@@ -318,6 +346,7 @@ pub fn render_titulo() {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
+    mover_contenido(&mut stdout, 18);
     luna_titulo(&mut stdout);
     let _ = stdout.queue(Print("\r\n"));
 
@@ -342,8 +371,11 @@ pub fn render_titulo() {
 
     let _ = stdout.queue(Print("\r\n"));
     let _ = stdout.queue(SetForegroundColor(Color::Cyan));
-    let _ = stdout.queue(Print("  Press any key to start\r\n"));
-    let _ = stdout.queue(Print("  or 'q' to quit\r\n"));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        texto_margen("Press any key to start")
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", texto_margen("or 'q' to quit"))));
     let _ = stdout.queue(ResetColor);
     let _ = stdout.flush();
 }
@@ -352,6 +384,7 @@ pub fn render_seleccion_personaje(personajes: &[Personaje], seleccion: usize) {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
+    mover_contenido(&mut stdout, 7 + personajes.len());
     let _ = stdout.queue(SetForegroundColor(Color::Cyan));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila(""))));
@@ -395,6 +428,7 @@ pub fn render_seleccion_persona(personas: &[Personaje], seleccion: usize) {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
+    mover_contenido(&mut stdout, 6 + 3 * personas.len());
     let _ = stdout.queue(SetForegroundColor(Color::Magenta));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
     let _ = stdout.queue(Print(&format!(
@@ -468,6 +502,7 @@ pub fn render_exploracion(
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
+    mover_contenido(&mut stdout, 16);
     escena_nocturna(&mut stdout);
 
     let _ = stdout.queue(SetForegroundColor(Color::Cyan));
@@ -544,6 +579,10 @@ pub fn render_combate(estado: &EstadoCombate) {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
+    mover_contenido(
+        &mut stdout,
+        25 + estado.registro.len().min(5) + estado.opciones.len(),
+    );
     let _ = stdout.queue(SetForegroundColor(Color::Red));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
     let _ = stdout.queue(Print(&format!(
@@ -707,6 +746,7 @@ pub fn render_habilidades(jugador: &Personaje, seleccion: usize) {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
+    mover_contenido(&mut stdout, 6 + 2 * jugador.habilidades.len());
     let _ = stdout.queue(SetForegroundColor(Color::Magenta));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila("  S K I L L S"))));
@@ -779,6 +819,7 @@ pub fn render_shuffle_time(cartas: &[CartaShuffle], seleccion: usize) {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
+    mover_contenido(&mut stdout, 12);
     let _ = stdout.queue(SetForegroundColor(Color::Yellow));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
     let _ = stdout.queue(Print(&format!(
@@ -830,6 +871,12 @@ pub fn render_fusion(stock: &[Personaje], fase: usize, seleccion: usize, fusion_
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
+    let altura = if fase == 1 && fusion_a.is_some() {
+        10 + stock.len()
+    } else {
+        7 + stock.len()
+    };
+    mover_contenido(&mut stdout, altura);
     let _ = stdout.queue(SetForegroundColor(Color::Magenta));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
     let _ = stdout.queue(Print(&format!(
@@ -924,6 +971,7 @@ pub fn render_game_over() {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
+    mover_contenido(&mut stdout, 12);
     let calavera = [
         "    .--------.    ",
         "   /  o    o  \\   ",
@@ -933,7 +981,7 @@ pub fn render_game_over() {
     ];
     let _ = stdout.queue(SetForegroundColor(Color::Red));
     for fila in calavera {
-        let _ = stdout.queue(Print(&format!("{}\r\n", fila)));
+        let _ = stdout.queue(Print(&format!("{}\r\n", texto_margen(fila))));
     }
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila("  G A M E   O V E R"))));
@@ -944,7 +992,11 @@ pub fn render_game_over() {
     )));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
     let _ = stdout.queue(ResetColor);
-    let _ = stdout.queue(Print("\n  Press any key to exit...\r\n"));
+    let _ = stdout.queue(Print("\n"));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        texto_margen("Press any key to exit...")
+    )));
     let _ = stdout.flush();
 }
 
