@@ -77,7 +77,7 @@ pub fn crear_jugador() -> Personaje {
                 nombre: String::from("Puñetazo"),
                 coste_mp: 5,
                 multiplicador_dano: 1.8,
-                descripcion: String::from("Un golpe potente que consume MP"),
+                descripcion: String::from("Un golpe Potente que consume MP"),
             },
             Skill {
                 nombre: String::from("Curar"),
@@ -116,7 +116,7 @@ pub fn crear_enemigos_nivel(nivel: u32) -> Vec<Enemigo> {
         },
         Enemigo {
             personaje: Personaje {
-                nombre: format!("Sombras Nv.{}", nivel),
+                nombre: format!("Sombra Nv.{}", nivel),
                 hp: base_hp + 20,
                 hp_max: base_hp + 20,
                 mp: 20,
