@@ -57,7 +57,7 @@ pub enum AccionJugador {
 
 pub fn crear_jugador() -> Personaje {
     Personaje {
-        nombre: String::from("Protagonista"),
+        nombre: String::from("Makoto"),
         hp: 100,
         hp_max: 100,
         mp: 50,
