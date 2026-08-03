@@ -9,9 +9,9 @@ A turn-based RPG for the terminal, inspired by **Persona 3 Portable**. Fight sha
 
 ## Demo
 
-<video src="https://github.com/Johannuel/persona-rpg/releases/download/demo-assets/demo.mp4" controls muted autoplay loop playsinline width="900" poster="https://raw.githubusercontent.com/Johannuel/persona-rpg/main/videos/demo.gif">
-  <img src="https://raw.githubusercontent.com/Johannuel/persona-rpg/main/videos/demo.gif" alt="Demo del juego">
-</video>
+[![Demo del juego](videos/demo.gif)](https://github.com/Johannuel/persona-rpg/blob/main/videos/demo.mp4)
+
+_Haz clic en la demo para ver el video (mp4, 1080p)._
 
 ## Features
 
