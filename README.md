@@ -9,7 +9,9 @@ Un RPG por turnos en la terminal inspirado en Persona 3 Portable. Combate, fusio
 
 ## Demo
 
-<video src="videos/demo.mp4" controls></video>
+<img src="videos/demo.gif" alt="Demo del juego">
+
+¿Prefieres el video completo? [demo.mp4 — 72 s, 1080p](videos/demo.mp4)
 
 ## Features
 
