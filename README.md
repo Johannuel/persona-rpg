@@ -35,29 +35,33 @@ Fight shadows in Tartarus, collect Personas, fuse them in the Velvet Room, and s
 
 ## Screenshots
 
-Combat against a Jack Frost shadow in Tartarus:
+Combat against a Pyro Jack shadow in Tartarus:
 
 ```text
 ┌────────────────────────────────────────────────────────────┐
 │   = = =   B A T T L E   = = =                              │
 ├────────────────────────────────────────────────────────────┤
-│   Jack Frost Lv.1  (Lv.1)  —  Shadow                        │
-│     ______                                                 │
-│    / o  o \         HP [██████████████]  65/65              │
-│    |  ^^  |         Weak: Fire  Resists: Ice               │
-│     \  __  /                                               │
-│      \____/                                                │
+│   Pyro Jack Lv.1  (Lv.1)  —  Shadow                        │
+│       /\                                                   │
+│      /--\               HP [████████░░░░░░]  34/60          │
+│     |o o o|             Weak: Ice  Resists: Fire           │
+│     |_^^^_|                                                │
+│      /|||\                                                 │
 ├────────────────────────────────────────────────────────────┤
 │   Makoto  (Lv.1)  —  Orpheus                               │
-│   \  /\  /                                                 │
-│    \/  \/           HP [██████████████]  100/100            │
-│    / o  o \         MP [██████████████]  50/50              │
-│    \  ^  /          Weak: Electric  Resists: —              │
-│     \__/                                                   │
+│     .---.                                                  │
+│    | o  o |             HP [███████████░░░]  80/100         │
+│    | ==== |             MP [██████████████]  50/50          │
+│    |  ⌄   |             Weak: Electric  Resists: —         │
+│     \___/                                                  │
 ├────────────────────────────────────────────────────────────┤
 │   ── Log ──                                                │
 ├────────────────────────────────────────────────────────────┤
 │ The battle begins!                                         │
+│ Makoto strikes for 13 damage!                              │
+│ Pyro Jack Lv.1 uses Agi and deals 11 damage!               │
+│ Makoto strikes for 13 damage!                              │
+│ Pyro Jack Lv.1 uses Maragi and deals 9 damage!             │
 ├────────────────────────────────────────────────────────────┤
 │   ── Action ──                                             │
 ├────────────────────────────────────────────────────────────┤
@@ -73,22 +77,24 @@ Combat against a Jack Frost shadow in Tartarus:
 Title screen:
 
 ```text
-        ______        
-     .-'      '-.     
-    /   .    .   \    
-   |   .      .   |   
-   |  .        .  |   
-    \   .    .   /    
-     '-.______.-'     
-┌────────────────────────────────────────────────────────────┐
-│                                                            │
-│   *  *  *  P E R S O N A   R P G  *  *  *                  │
-│                                                            │
-│   A turn-based RPG inspired by Persona 3                   │
-│   The Dark Hour awaits you...                              │
-└────────────────────────────────────────────────────────────┘
-  Press any key to start
-  or 'q' to quit
+                 ______
+              .-'      '-.
+             /   .    .   \
+            |   .      .   |
+            |  .        .  |
+             \   .    .   /
+              '-.______.-'
+
+         ┌────────────────────────────────────────────────────────────┐
+         │                                                            │
+         │   *  *  *  P E R S O N A   R P G  *  *  *                  │
+         │                                                            │
+         │   A turn-based RPG inspired by Persona 3                   │
+         │   The Dark Hour awaits you...                              │
+         └────────────────────────────────────────────────────────────┘
+
+         Press any key to start
+         or 'q' to quit
 ```
 
 ## Run
