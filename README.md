@@ -1,27 +1,37 @@
-# persona-rpg
+<div align="center">
 
-[![Rust](https://img.shields.io/badge/rust-1.81%2B-orange)](https://www.rust-lang.org)
-[![crossterm](https://img.shields.io/badge/TUI-crossterm-blueviolet)](https://crates.io/crates/crossterm)
+# 🎮 persona-rpg
 
-A turn-based RPG for the terminal, inspired by **Persona 3 Portable**. Fight shadows in Tartarus, collect Personas, fuse them in the Velvet Room, and survive the Dark Hour.
+*A turn-based RPG for your terminal, inspired by Persona 3 Portable*
 
+[![Rust](https://img.shields.io/badge/rust-1.81%2B-orange?style=flat-square)](https://www.rust-lang.org)
+[![crossterm](https://img.shields.io/badge/TUI-crossterm-blueviolet?style=flat-square)](https://crates.io/crates/crossterm)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
+⭐ If you like this project, star it on GitHub!
+
+[Demo](#-demo) • [Features](#features) • [Screenshots](#screenshots) • [Run](#run) • [Controls](#controls) • [Roadmap](#roadmap)
+
+</div>
+
+Fight shadows in Tartarus, collect Personas, fuse them in the Velvet Room, and survive the Dark Hour — all in a 60-column terminal window. No game engine, no GUI: just Rust, crossterm and rand.
 
 ## 📸 Demo
 
 <p align="center">
   <img src="videos/demo.gif" alt="Game demo — turn-based combat, Persona fusion and Shuffle Time" width="100%">
 </p>
+
 ## Features
 
-- **5 playable characters** — Makoto, Yukari, Junpei, Akihiko, Mitsuru, each with a signature Persona
-- **17 collectible Personas** with their P3 arcana: Orpheus, Jack Frost, Pyro Jack, Pixie, Hua Po...
-- **Velvet Room fusion** — combine two Personas (P3 arcana chart, skill inheritance, level math)
-- **Shuffle Time** — after every victory, pick one of three cards: a new Persona, HP/MP recovery, or bonus EXP
-- **Elemental combat** — 5 elements; hit a weakness for a critical, resist to halve
-- **16+ Tartarus shadows** scaled to your level, with weaknesses, resistances, buffs and debuffs
-- **ASCII-art sprites**, colored HP/MP bars, and a colored combat log
-- **Leveling** — gain EXP, grow stats, up to level 20
+- 🎭 **5 playable characters** — Makoto, Yukari, Junpei, Akihiko, Mitsuru, each with a signature Persona
+- 🗡️ **17 collectible Personas** with their P3 arcana: Orpheus, Jack Frost, Pyro Jack, Pixie, Hua Po...
+- 💠 **Velvet Room fusion** — combine two Personas (P3 arcana chart, skill inheritance, level math)
+- 🃏 **Shuffle Time** — after every victory, pick one of three cards: a new Persona, HP/MP recovery, or bonus EXP
+- ⚡ **Elemental combat** — 5 elements; hit a weakness for a critical, resist to halve
+- 👾 **16+ Tartarus shadows** scaled to your level, with weaknesses, resistances, buffs and debuffs
+- 🎨 **ASCII-art sprites**, colored HP/MP bars, and a colored combat log
+- 📈 **Leveling** — gain EXP, grow stats, up to level 20
 
 ## Screenshots
 
