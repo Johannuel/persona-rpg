@@ -1,6 +1,6 @@
 # persona-rpg
 
-RPG por turnos en la terminal (TUI), inspirado en Persona 3 Portable.
+RPG por turnos en la terminal (TUI), inspirado en Persona.
 
 ## Ejecutar
 
