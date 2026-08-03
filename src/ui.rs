@@ -8,16 +8,33 @@ use crossterm::{
 };
 use std::io::{self, Write};
 
-use crate::data::{EstadoCombate, Personaje};
+use crate::data::{fusionar, CartaShuffle, Efecto, Elemento, EstadoCombate, Personaje, Skill};
 
-const ANCHO: usize = 50;
+const ANCHO: usize = 60;
+const ANCHO_INTERIOR: usize = ANCHO - 2;
 
-fn linea() -> String {
-    format!("+{}+", "-".repeat(ANCHO))
+fn caja_superior() -> String {
+    format!("┌{}┐", "─".repeat(ANCHO))
 }
 
-fn linea_doble() -> String {
-    format!("+{}+", "=".repeat(ANCHO))
+fn caja_medio() -> String {
+    format!("├{}┤", "─".repeat(ANCHO))
+}
+
+fn caja_inferior() -> String {
+    format!("└{}┘", "─".repeat(ANCHO))
+}
+
+fn caja_fila(texto: &str) -> String {
+    format!("│ {:<width$} │", texto, width = ANCHO_INTERIOR)
+}
+
+fn fila_sprite(fila: &str, extra: &str) -> String {
+    format!(
+        "│ {:<width$} │",
+        format!("{}    {}", fila, extra),
+        width = ANCHO_INTERIOR
+    )
 }
 
 pub fn limpiar_pantalla() {
@@ -32,25 +49,6 @@ pub fn ocultar_cursor() {
 
 pub fn mostrar_cursor() {
     execute!(io::stdout(), cursor::Show).unwrap();
-}
-
-pub fn render_titulo() {
-    limpiar_pantalla();
-    let mut stdout = io::stdout();
-    let _ = stdout.queue(SetForegroundColor(Color::Yellow));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea_doble())));
-    let _ = stdout.queue(Print("  *  *  *  P E R S O N A   R P G  *  *  *\r\n"));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea_doble())));
-    let _ = stdout.queue(ResetColor);
-    let _ = stdout.queue(Print("\r\n"));
-    let _ = stdout.queue(Print("  Un juego de RPG por turnos\r\n"));
-    let _ = stdout.queue(Print("  inspirado en Persona \r\n"));
-    let _ = stdout.queue(Print("\r\n"));
-    let _ = stdout.queue(SetForegroundColor(Color::Cyan));
-    let _ = stdout.queue(Print("  Presiona cualquier tecla para comenzar\r\n"));
-    let _ = stdout.queue(Print("  o 'q' para salir\r\n"));
-    let _ = stdout.queue(ResetColor);
-    let _ = stdout.flush();
 }
 
 fn color_hp(porcentaje: f32) -> Color {
@@ -71,51 +69,476 @@ fn color_mp(porcentaje: f32) -> Color {
     }
 }
 
-pub fn render_exploracion(jugador: &Personaje, mensaje: &str) {
+fn sprite_art(filas: [&str; 5]) -> Vec<String> {
+    filas.iter().map(|f| format!("{:<16}", f)).collect()
+}
+
+fn sprite_enemigo(nombre: &str) -> Vec<String> {
+    let base = nombre.split(" Nv.").next().unwrap_or(nombre);
+    match base {
+        "Jack Frost" => sprite_art([
+            "    ______     ",
+            "   / o  o \\    ",
+            "   |  ^^  |    ",
+            "    \\  __  /    ",
+            "     \\____/     ",
+        ]),
+        "Pyro Jack" => sprite_art([
+            "    _    _     ",
+            "   (o)  (o)    ",
+            "   (   ^  )    ",
+            "    \\____/     ",
+            "    /|  |\\     ",
+        ]),
+        "Pixie" => sprite_art([
+            "   /\\   /\\     ",
+            "  ( o ) ( o )  ",
+            "   \\_/   \\_/   ",
+            "    |  *  |    ",
+            "    |     |    ",
+        ]),
+        "Maya Cobarde" | "Maya Implacable" => sprite_art([
+            "   ________   ",
+            "  /  o  o  \\  ",
+            " |   ~ ~    | ",
+            "  \\  ___  /   ",
+            "   '-----'    ",
+        ]),
+        "Mesa Reidora" => sprite_art([
+            "   ________    ",
+            "  |  o  o  |   ",
+            "  |  ___   |   ",
+            "  |_______|    ",
+            "   |     |     ",
+        ]),
+        "Cuervo Negro" => sprite_art([
+            "     ___       ",
+            "    (o o)>     ",
+            "     \\_/       ",
+            "   __/|\\__     ",
+            "  |  / \\  |    ",
+        ]),
+        "Libro Maníaco" => sprite_art([
+            "  _________    ",
+            " |  o   o  |   ",
+            " |   ___   |   ",
+            " |_________|   ",
+            "    |   |      ",
+        ]),
+        "Naga" => sprite_art([
+            "    ,~~~~~     ",
+            "   /   o o     ",
+            "  |      ^     ",
+            "   \\__/        ",
+            "   /|  |\\      ",
+        ]),
+        "Súcubo" => sprite_art([
+            "   \\__   __/   ",
+            "    ) o o (    ",
+            "   (   ^   )   ",
+            "    \\_____/    ",
+            "     /||\\      ",
+        ]),
+        "Quimera" => sprite_art([
+            "    _______    ",
+            "   / o o  \\    ",
+            "  |  /\\    |   ",
+            "  | /  \\   |   ",
+            "   \\____/     ",
+        ]),
+        "Tiara Llorosa" => sprite_art([
+            "   /\\   /\\   /\\ ",
+            "  /  \\ /  \\ /  \\",
+            "  |  o    o  | ",
+            "   \\   __  /  ",
+            "    \\______/  ",
+        ]),
+        "Lilim" => sprite_art([
+            "  /\\     /\\   ",
+            "  \\  \\  /  /   ",
+            "   ( o  o )   ",
+            "    \\____/    ",
+            "    |    |    ",
+        ]),
+        _ => sprite_art([
+            "     _  _     ",
+            "    (o  o)    ",
+            "    (  v  )   ",
+            "     \\__/     ",
+            "    / |  \\    ",
+        ]),
+    }
+}
+
+fn sprite_persona(persona: &str) -> Vec<String> {
+    match persona {
+        "Jack Frost" => sprite_enemigo("Jack Frost"),
+        "Pyro Jack" => sprite_enemigo("Pyro Jack"),
+        "Pixie" => sprite_enemigo("Pixie"),
+        "Orpheus" => sprite_art([
+            "  \\  /\\  /    ",
+            "   \\/  \\/     ",
+            "   / o  o \\   ",
+            "   \\  ^  /    ",
+            "    \\__/      ",
+        ]),
+        _ => sprite_art([
+            "    .---.     ",
+            "   / o  o \\   ",
+            "  |   ~~~   | ",
+            "   \\_____/   ",
+            "  _/     \\_  ",
+        ]),
+    }
+}
+
+fn etiquetas(elementos: &[Elemento]) -> String {
+    if elementos.is_empty() {
+        String::from("—")
+    } else {
+        elementos
+            .iter()
+            .map(|e| e.etiqueta())
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+}
+
+fn formato_habilidad(hab: &Skill) -> String {
+    match hab.efecto {
+        Efecto::Danio => format!("{} x{}", hab.elemento.etiqueta(), hab.multiplicador_dano),
+        Efecto::Curacion => format!("Cura {}% HP", (hab.multiplicador_dano * 100.0) as u32),
+        Efecto::BuffAtaque => String::from("Sube tu ataque"),
+        Efecto::BuffDefensa => String::from("Sube tu defensa"),
+        Efecto::DebuffAtaque => String::from("Baja el ataque enemigo"),
+        Efecto::DebuffDefensa => String::from("Baja la defensa enemiga"),
+    }
+}
+
+fn colorear_registro(linea: &str) -> (Color, String) {
+    if let Some(resto) = linea.strip_prefix('[').and_then(|r| r.split_once(']')) {
+        let color = match resto.0 {
+            "Fuego" => Color::Red,
+            "Hielo" => Color::Cyan,
+            "Viento" => Color::Green,
+            "Eléctrico" => Color::Yellow,
+            _ => Color::White,
+        };
+        return (color, resto.1.trim_start().to_string());
+    }
+    if linea.contains("crítico") {
+        (Color::Yellow, linea.to_string())
+    } else if linea.contains("recupera") {
+        (Color::Green, linea.to_string())
+    } else if linea.contains("resiste") {
+        (Color::DarkGrey, linea.to_string())
+    } else {
+        (Color::White, linea.to_string())
+    }
+}
+
+fn barra_str(actual: u32, maximo: u32, ancho: usize) -> String {
+    let porcentaje = if maximo > 0 {
+        actual as f32 / maximo as f32
+    } else {
+        0.0
+    };
+    let llenos = (porcentaje * ancho as f32).round() as usize;
+    let vacios = ancho.saturating_sub(llenos);
+    let mut resultado = String::with_capacity(ancho + 2);
+    resultado.push('[');
+    for _ in 0..llenos {
+        resultado.push('█');
+    }
+    for _ in 0..vacios {
+        resultado.push('░');
+    }
+    resultado.push(']');
+    resultado
+}
+
+fn resumen_personaje(personaje: &Personaje) -> String {
+    format!(
+        "{} · {} · HP {} MP {} ATQ {} DEF {}",
+        personaje.nombre,
+        personaje.persona,
+        personaje.hp_max,
+        personaje.mp_max,
+        personaje.ataque,
+        personaje.defensa
+    )
+}
+
+const LUNA: [&str; 6] = [
+    "    .-''-.     ",
+    "   /  ..  \\    ",
+    "  |  .  .  |   ",
+    "  | .    . |   ",
+    "   \\  ..  /    ",
+    "    '-..-'     ",
+];
+
+const TORRE: [&str; 6] = [
+    "     ______________",
+    "    |   __   __   |",
+    "    |  |__| |__|  |",
+    "    |     []      |",
+    "    |__[]_____[]__|",
+    "       |      |   ",
+];
+
+fn escena_nocturna(stdout: &mut (impl Write + QueueableCommand)) {
+    for i in 0..6 {
+        let _ = stdout.queue(SetForegroundColor(Color::Yellow));
+        let _ = stdout.queue(Print(LUNA[i]));
+        let _ = stdout.queue(SetForegroundColor(Color::DarkGrey));
+        let _ = stdout.queue(Print(&format!("  {}\r\n", TORRE[i])));
+        let _ = stdout.queue(ResetColor);
+    }
+}
+
+fn luna_titulo(stdout: &mut (impl Write + QueueableCommand)) {
+    let luna = [
+        "        ______        ",
+        "     .-'      '-.     ",
+        "    /   .    .   \\    ",
+        "   |   .      .   |   ",
+        "   |  .        .  |   ",
+        "    \\   .    .   /    ",
+        "     '-.______.-'     ",
+    ];
+    let _ = stdout.queue(SetForegroundColor(Color::Yellow));
+    for fila in luna {
+        let _ = stdout.queue(Print(&format!("{}\r\n", fila)));
+    }
+    let _ = stdout.queue(ResetColor);
+}
+
+pub fn render_titulo() {
+    limpiar_pantalla();
+    let mut stdout = io::stdout();
+
+    luna_titulo(&mut stdout);
+    let _ = stdout.queue(Print("\r\n"));
+
+    let _ = stdout.queue(SetForegroundColor(Color::Yellow));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila(""))));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  *  *  *  P E R S O N A   R P G  *  *  *")
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila(""))));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  Un RPG por turnos inspirado en Persona 3")
+    )));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  La Hora Oscura te espera...")
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
+    let _ = stdout.queue(ResetColor);
+
+    let _ = stdout.queue(Print("\r\n"));
+    let _ = stdout.queue(SetForegroundColor(Color::Cyan));
+    let _ = stdout.queue(Print("  Presiona cualquier tecla para comenzar\r\n"));
+    let _ = stdout.queue(Print("  o 'q' para salir\r\n"));
+    let _ = stdout.queue(ResetColor);
+    let _ = stdout.flush();
+}
+
+pub fn render_seleccion_personaje(personajes: &[Personaje], seleccion: usize) {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
     let _ = stdout.queue(SetForegroundColor(Color::Cyan));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila(""))));
     let _ = stdout.queue(Print(&format!(
-        "  {}  |  Nv.{}  |  Exp: {}\r\n",
-        jugador.nombre, jugador.nivel, jugador.experiencia
+        "{}\r\n",
+        caja_fila("  E L I G E   P E R S O N A J E")
     )));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
     let _ = stdout.queue(ResetColor);
 
-    let hp_pct = jugador.hp as f32 / jugador.hp_max as f32;
-    let _ = stdout.queue(SetForegroundColor(color_hp(hp_pct)));
+    for (i, personaje) in personajes.iter().enumerate() {
+        if i == seleccion {
+            let _ = stdout.queue(SetForegroundColor(Color::Yellow));
+            let _ = stdout.queue(SetBackgroundColor(Color::DarkGrey));
+            let _ = stdout.queue(Print(&format!(
+                "{}\r\n",
+                caja_fila(&format!("> {}", resumen_personaje(personaje)))
+            )));
+            let _ = stdout.queue(ResetColor);
+        } else {
+            let _ = stdout.queue(Print(&format!(
+                "{}\r\n",
+                caja_fila(&format!("  {}", resumen_personaje(personaje)))
+            )));
+        }
+    }
+
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(SetForegroundColor(Color::Green));
     let _ = stdout.queue(Print(&format!(
-        "  HP  {}/{}  {}\r\n",
-        jugador.hp,
-        jugador.hp_max,
-        barra(jugador.hp, jugador.hp_max, 20)
+        "{}\r\n",
+        caja_fila("↑/↓ Seleccionar   Enter Confirmar   q Salir")
+    )));
+    let _ = stdout.queue(SetForegroundColor(Color::Cyan));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
+    let _ = stdout.queue(ResetColor);
+    let _ = stdout.flush();
+}
+
+pub fn render_seleccion_persona(personas: &[Personaje], seleccion: usize) {
+    limpiar_pantalla();
+    let mut stdout = io::stdout();
+
+    let _ = stdout.queue(SetForegroundColor(Color::Magenta));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  C A M B I A   D E   P E R S O N A")
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(ResetColor);
+
+    for (i, persona) in personas.iter().enumerate() {
+        let detalle = format!(
+            "{} · {}  |  HP {}  MP {}  ATQ {}  DEF {}",
+            persona.arcana.map(|a| a.etiqueta()).unwrap_or("—"),
+            persona.persona,
+            persona.hp_max,
+            persona.mp_max,
+            persona.ataque,
+            persona.defensa
+        );
+        if i == seleccion {
+            let _ = stdout.queue(SetForegroundColor(Color::Yellow));
+            let _ = stdout.queue(SetBackgroundColor(Color::DarkGrey));
+            let _ = stdout.queue(Print(&format!(
+                "{}\r\n",
+                caja_fila(&format!("> {}", detalle))
+            )));
+            let _ = stdout.queue(ResetColor);
+        } else {
+            let _ = stdout.queue(Print(&format!(
+                "{}\r\n",
+                caja_fila(&format!("  {}", detalle))
+            )));
+        }
+        let nombres_habilidades: Vec<&str> = persona
+            .habilidades
+            .iter()
+            .map(|h| h.nombre.as_str())
+            .collect();
+        let _ = stdout.queue(Print(&format!(
+            "{}\r\n",
+            caja_fila(&format!(
+                "    Habilidades: {}",
+                nombres_habilidades.join(", ")
+            ))
+        )));
+        let _ = stdout.queue(Print(&format!(
+            "{}\r\n",
+            caja_fila(&format!(
+                "    Débil: {}  Resiste: {}",
+                etiquetas(&persona.debilidades),
+                etiquetas(&persona.resistencias)
+            ))
+        )));
+    }
+
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(SetForegroundColor(Color::Green));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("↑/↓ Seleccionar   Enter Cambiar   Esc Volver")
+    )));
+    let _ = stdout.queue(SetForegroundColor(Color::Magenta));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
+    let _ = stdout.queue(ResetColor);
+    let _ = stdout.flush();
+}
+
+pub fn render_exploracion(
+    jugador: &Personaje,
+    mensaje: &str,
+    con_personas: bool,
+    con_fusion: bool,
+) {
+    limpiar_pantalla();
+    let mut stdout = io::stdout();
+
+    escena_nocturna(&mut stdout);
+
+    let _ = stdout.queue(SetForegroundColor(Color::Cyan));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila(&format!(
+            "{}  ·  {}   |   Nv.{}   |   Exp: {}",
+            jugador.nombre, jugador.persona, jugador.nivel, jugador.experiencia
+        ))
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(ResetColor);
+
+    let _ = stdout.queue(SetForegroundColor(color_hp(
+        jugador.hp as f32 / jugador.hp_max as f32,
+    )));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila(&format!(
+            "HP  {}  {}/{}",
+            barra_str(jugador.hp, jugador.hp_max, 18),
+            jugador.hp,
+            jugador.hp_max
+        ))
+    )));
+    let _ = stdout.queue(ResetColor);
+    let _ = stdout.queue(SetForegroundColor(color_mp(
+        jugador.mp as f32 / jugador.mp_max as f32,
+    )));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila(&format!(
+            "MP  {}  {}/{}",
+            barra_str(jugador.mp, jugador.mp_max, 18),
+            jugador.mp,
+            jugador.mp_max
+        ))
     )));
     let _ = stdout.queue(ResetColor);
 
     let _ = stdout.queue(SetForegroundColor(Color::DarkGrey));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
-    let _ = stdout.queue(ResetColor);
-
-    let mp_pct = jugador.mp as f32 / jugador.mp_max as f32;
-    let _ = stdout.queue(SetForegroundColor(color_mp(mp_pct)));
-    let _ = stdout.queue(Print(&format!(
-        "  MP  {}/{}  {}\r\n",
-        jugador.mp,
-        jugador.mp_max,
-        barra(jugador.mp, jugador.mp_max, 10)
-    )));
-    let _ = stdout.queue(ResetColor);
-
-    let _ = stdout.queue(SetForegroundColor(Color::White));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
-    let _ = stdout.queue(Print(&format!("  {}\r\n", mensaje)));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila(mensaje))));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
     let _ = stdout.queue(ResetColor);
 
     let _ = stdout.queue(SetForegroundColor(Color::Green));
-    let _ = stdout.queue(Print("  [1] Avanzar   [2] Descansar   [q] Salir\r\n"));
+    if con_personas {
+        if con_fusion {
+            let _ = stdout.queue(Print(&format!(
+                "{}\r\n",
+                caja_fila("[1] Avanzar   [2] Descansar   [3] Persona   [4] Fusionar")
+            )));
+        } else {
+            let _ = stdout.queue(Print(&format!(
+                "{}\r\n",
+                caja_fila("[1] Avanzar   [2] Descansar   [3] Persona   [q] Salir")
+            )));
+        }
+    } else {
+        let _ = stdout.queue(Print(&format!(
+            "{}\r\n",
+            caja_fila("[1] Avanzar   [2] Descansar   [q] Salir")
+        )));
+    }
+    let _ = stdout.queue(SetForegroundColor(Color::Cyan));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
     let _ = stdout.queue(ResetColor);
     let _ = stdout.flush();
 }
@@ -125,59 +548,115 @@ pub fn render_combate(estado: &EstadoCombate) {
     let mut stdout = io::stdout();
 
     let _ = stdout.queue(SetForegroundColor(Color::Red));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea_doble())));
-    let _ = stdout.queue(Print("  =  C O M B A T E  =\r\n"));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea_doble())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  = = =   C O M B A T E   = = =")
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
     let _ = stdout.queue(ResetColor);
 
     let enemigo = &estado.enemigo.personaje;
-    let hp_pct_enemigo = enemigo.hp as f32 / enemigo.hp_max as f32;
-    let _ = stdout.queue(SetForegroundColor(color_hp(hp_pct_enemigo)));
+    let _ = stdout.queue(SetForegroundColor(Color::Red));
     let _ = stdout.queue(Print(&format!(
-        "  {}  (Nv.{})\r\n",
-        enemigo.nombre, enemigo.nivel
-    )));
-    let _ = stdout.queue(Print(&format!(
-        "  HP: {}/{}  {}\r\n",
-        enemigo.hp,
-        enemigo.hp_max,
-        barra(enemigo.hp, enemigo.hp_max, 20)
+        "{}\r\n",
+        caja_fila(&format!(
+            "  {}  (Nv.{})  —  {}",
+            enemigo.nombre, enemigo.nivel, enemigo.persona
+        ))
     )));
     let _ = stdout.queue(ResetColor);
 
-    let _ = stdout.queue(SetForegroundColor(Color::DarkGrey));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
-    let _ = stdout.queue(ResetColor);
+    let sprite = sprite_enemigo(&enemigo.nombre);
+    for (i, fila) in sprite.iter().enumerate() {
+        match i {
+            1 => {
+                let extra = format!(
+                    "HP {}  {}/{}",
+                    barra_str(enemigo.hp, enemigo.hp_max, 14),
+                    enemigo.hp,
+                    enemigo.hp_max
+                );
+                let _ = stdout.queue(SetForegroundColor(color_hp(
+                    enemigo.hp as f32 / enemigo.hp_max as f32,
+                )));
+                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
+                let _ = stdout.queue(ResetColor);
+            }
+            2 => {
+                let extra = format!(
+                    "Débil: {}  Resiste: {}",
+                    etiquetas(&enemigo.debilidades),
+                    etiquetas(&enemigo.resistencias)
+                );
+                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
+            }
+            _ => {
+                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, ""))));
+            }
+        }
+    }
+
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
 
     let jugador = &estado.jugador;
-    let hp_pct_jugador = jugador.hp as f32 / jugador.hp_max as f32;
-    let _ = stdout.queue(SetForegroundColor(color_hp(hp_pct_jugador)));
+    let _ = stdout.queue(SetForegroundColor(Color::Cyan));
     let _ = stdout.queue(Print(&format!(
-        "  {}  (Nv.{})\r\n",
-        jugador.nombre, jugador.nivel
-    )));
-    let _ = stdout.queue(Print(&format!(
-        "  HP: {}/{}  {}\r\n",
-        jugador.hp,
-        jugador.hp_max,
-        barra(jugador.hp, jugador.hp_max, 20)
+        "{}\r\n",
+        caja_fila(&format!(
+            "  {}  (Nv.{})  —  {}",
+            jugador.nombre, jugador.nivel, jugador.persona
+        ))
     )));
     let _ = stdout.queue(ResetColor);
 
-    let mp_pct = jugador.mp as f32 / jugador.mp_max as f32;
-    let _ = stdout.queue(SetForegroundColor(color_mp(mp_pct)));
-    let _ = stdout.queue(Print(&format!(
-        "  MP: {}/{}  {}\r\n",
-        jugador.mp,
-        jugador.mp_max,
-        barra(jugador.mp, jugador.mp_max, 10)
-    )));
-    let _ = stdout.queue(ResetColor);
+    let sprite_jugador = sprite_persona(&jugador.persona);
+    for (i, fila) in sprite_jugador.iter().enumerate() {
+        match i {
+            1 => {
+                let extra = format!(
+                    "HP {}  {}/{}",
+                    barra_str(jugador.hp, jugador.hp_max, 14),
+                    jugador.hp,
+                    jugador.hp_max
+                );
+                let _ = stdout.queue(SetForegroundColor(color_hp(
+                    jugador.hp as f32 / jugador.hp_max as f32,
+                )));
+                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
+                let _ = stdout.queue(ResetColor);
+            }
+            2 => {
+                let extra = format!(
+                    "MP {}  {}/{}",
+                    barra_str(jugador.mp, jugador.mp_max, 14),
+                    jugador.mp,
+                    jugador.mp_max
+                );
+                let _ = stdout.queue(SetForegroundColor(color_mp(
+                    jugador.mp as f32 / jugador.mp_max as f32,
+                )));
+                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
+                let _ = stdout.queue(ResetColor);
+            }
+            3 => {
+                let extra = format!(
+                    "Débil: {}  Resiste: {}",
+                    etiquetas(&jugador.debilidades),
+                    etiquetas(&jugador.resistencias)
+                );
+                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, &extra))));
+            }
+            _ => {
+                let _ = stdout.queue(Print(&format!("{}\r\n", fila_sprite(fila, ""))));
+            }
+        }
+    }
 
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
     let _ = stdout.queue(SetForegroundColor(Color::DarkGrey));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
-    let _ = stdout.queue(Print("  Registro:\r\n"));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila("  ── Registro ──"))));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
     let _ = stdout.queue(ResetColor);
 
     let inicio = if estado.registro.len() > 5 {
@@ -186,26 +665,44 @@ pub fn render_combate(estado: &EstadoCombate) {
         0
     };
     for linea in &estado.registro[inicio..] {
-        let _ = stdout.queue(Print(&format!("  {}\r\n", linea)));
+        let (color, texto) = colorear_registro(linea);
+        let _ = stdout.queue(SetForegroundColor(color));
+        let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila(&texto))));
+        let _ = stdout.queue(ResetColor);
     }
 
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
     let _ = stdout.queue(SetForegroundColor(Color::Yellow));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
-    let _ = stdout.queue(Print("  Accion:\r\n"));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila("  ── Acción ──"))));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
     let _ = stdout.queue(ResetColor);
 
     for (i, opcion) in estado.opciones.iter().enumerate() {
         if i == estado.seleccion_actual {
             let _ = stdout.queue(SetForegroundColor(Color::Yellow));
             let _ = stdout.queue(SetBackgroundColor(Color::DarkGrey));
-            let _ = stdout.queue(Print(&format!("  > {} <\r\n", opcion)));
+            let _ = stdout.queue(Print(&format!(
+                "{}\r\n",
+                caja_fila(&format!("  > {} <", opcion))
+            )));
             let _ = stdout.queue(ResetColor);
         } else {
-            let _ = stdout.queue(Print(&format!("    {}\r\n", opcion)));
+            let _ = stdout.queue(Print(&format!(
+                "{}\r\n",
+                caja_fila(&format!("    {}", opcion))
+            )));
         }
     }
 
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(SetForegroundColor(Color::DarkGrey));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("↑/↓ mover   Enter elegir   q rendirse")
+    )));
+    let _ = stdout.queue(SetForegroundColor(Color::Red));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
+    let _ = stdout.queue(ResetColor);
     let _ = stdout.flush();
 }
 
@@ -214,36 +711,217 @@ pub fn render_habilidades(jugador: &Personaje, seleccion: usize) {
     let mut stdout = io::stdout();
 
     let _ = stdout.queue(SetForegroundColor(Color::Magenta));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea_doble())));
-    let _ = stdout.queue(Print("  H A B I L I D A D E S\r\n"));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea_doble())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  H A B I L I D A D E S")
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
     let _ = stdout.queue(ResetColor);
 
     for (i, hab) in jugador.habilidades.iter().enumerate() {
-        let estado_str = if hab.multiplicador_dano > 0.0 {
-            format!("x{}", hab.multiplicador_dano)
-        } else {
-            "curacion".to_string()
-        };
+        let texto = format!(
+            "  {}  [{} MP]  {}",
+            hab.nombre,
+            hab.coste_mp,
+            formato_habilidad(hab)
+        );
         if i == seleccion {
             let _ = stdout.queue(SetForegroundColor(Color::Yellow));
             let _ = stdout.queue(SetBackgroundColor(Color::DarkGrey));
             let _ = stdout.queue(Print(&format!(
-                "  > {}  - {}  {}\r\n",
-                hab.nombre, hab.descripcion, estado_str
+                "{}\r\n",
+                caja_fila(&format!("> {}", texto))
+            )));
+            let _ = stdout.queue(ResetColor);
+        } else {
+            let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila(&texto))));
+        }
+        let _ = stdout.queue(Print(&format!(
+            "{}\r\n",
+            caja_fila(&format!("      {}", hab.descripcion))
+        )));
+    }
+
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(SetForegroundColor(Color::Green));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("↑/↓ Seleccionar   Enter Usar   Esc Volver")
+    )));
+    let _ = stdout.queue(SetForegroundColor(Color::Magenta));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
+    let _ = stdout.queue(ResetColor);
+    let _ = stdout.flush();
+}
+
+fn recortar(texto: &str, ancho: usize) -> String {
+    texto.chars().take(ancho).collect()
+}
+
+fn tarjeta_shuffle(carta: &CartaShuffle) -> [String; 4] {
+    let (titulo, detalle) = match carta {
+        CartaShuffle::Persona(persona) => {
+            let arcana = persona.arcana.map(|a| a.etiqueta()).unwrap_or("—");
+            (
+                persona.persona.clone(),
+                format!("{} · Nv.{}", arcana, persona.nivel),
+            )
+        }
+        CartaShuffle::Copa => (String::from("COPA"), String::from("40% HP · +15 MP")),
+        CartaShuffle::Vara => (String::from("VARA"), String::from("+25 EXP")),
+        CartaShuffle::Vacia => (String::from("VACÍA"), String::from("sin recompensa")),
+    };
+    let ancho = 16;
+    [
+        format!("┌{0:─<16}┐", ""),
+        format!("│{:<16}│", recortar(&titulo, ancho)),
+        format!("│{:<16}│", recortar(&detalle, ancho)),
+        format!("└{}┘", "─".repeat(ancho)),
+    ]
+}
+
+pub fn render_shuffle_time(cartas: &[CartaShuffle], seleccion: usize) {
+    limpiar_pantalla();
+    let mut stdout = io::stdout();
+
+    let _ = stdout.queue(SetForegroundColor(Color::Yellow));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  S H U F F L E   T I M E")
+    )));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  Las cartas del destino se revelan...")
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(ResetColor);
+
+    let tarjetas: Vec<[String; 4]> = cartas.iter().map(tarjeta_shuffle).collect();
+    for fila in 0..4 {
+        let mut linea = String::new();
+        for (i, tarjeta) in tarjetas.iter().enumerate() {
+            if i == seleccion {
+                linea.push_str(&format!("▶ {} ", tarjeta[fila]));
+            } else {
+                linea.push_str(&format!("   {} ", tarjeta[fila]));
+            }
+        }
+        let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila(&linea))));
+    }
+    let mut marca = String::new();
+    for i in 0..cartas.len() {
+        if i == seleccion {
+            marca.push_str("        ▲         ");
+        } else {
+            marca.push_str("                   ");
+        }
+    }
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila(&marca))));
+
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(SetForegroundColor(Color::Green));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("↑/↓ Elegir   Enter Tomar la carta")
+    )));
+    let _ = stdout.queue(SetForegroundColor(Color::Yellow));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
+    let _ = stdout.queue(ResetColor);
+    let _ = stdout.flush();
+}
+
+pub fn render_fusion(stock: &[Personaje], fase: usize, seleccion: usize, fusion_a: Option<usize>) {
+    limpiar_pantalla();
+    let mut stdout = io::stdout();
+
+    let _ = stdout.queue(SetForegroundColor(Color::Magenta));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  S A L A   V E L V E T")
+    )));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  Elizabeth: ¿qué personas fusionaremos hoy?")
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(ResetColor);
+
+    for (i, persona) in stock.iter().enumerate() {
+        let marcador = if Some(i) == fusion_a {
+            "  [1ª]"
+        } else if fase == 1 && i == seleccion {
+            "  [2ª]"
+        } else {
+            ""
+        };
+        let detalle = format!(
+            "{} · {} Nv.{}  |  HP {} MP {} ATQ {} DEF {}{}",
+            persona.arcana.map(|a| a.etiqueta()).unwrap_or("—"),
+            persona.persona,
+            persona.nivel,
+            persona.hp_max,
+            persona.mp_max,
+            persona.ataque,
+            persona.defensa,
+            marcador
+        );
+        if i == seleccion {
+            let _ = stdout.queue(SetForegroundColor(Color::Yellow));
+            let _ = stdout.queue(SetBackgroundColor(Color::DarkGrey));
+            let _ = stdout.queue(Print(&format!(
+                "{}\r\n",
+                caja_fila(&format!("> {}", detalle))
             )));
             let _ = stdout.queue(ResetColor);
         } else {
             let _ = stdout.queue(Print(&format!(
-                "    {}  - {}  {}\r\n",
-                hab.nombre, hab.descripcion, estado_str
+                "{}\r\n",
+                caja_fila(&format!("  {}", detalle))
             )));
         }
     }
 
+    if fase == 1 {
+        if let Some(a) = fusion_a {
+            if a != seleccion && seleccion < stock.len() {
+                let resultado = fusionar(&stock[a], &stock[seleccion]);
+                let arcana = resultado.arcana.map(|x| x.etiqueta()).unwrap_or("—");
+                let nombres: Vec<&str> = resultado
+                    .habilidades
+                    .iter()
+                    .map(|h| h.nombre.as_str())
+                    .collect();
+                let _ = stdout.queue(SetForegroundColor(Color::Cyan));
+                let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+                let _ = stdout.queue(Print(&format!(
+                    "{}\r\n",
+                    caja_fila(&format!(
+                        "Resultado: {} · {} Nv.{}",
+                        arcana, resultado.persona, resultado.nivel
+                    ))
+                )));
+                let _ = stdout.queue(Print(&format!(
+                    "{}\r\n",
+                    caja_fila(&format!("Habilidades: {}", nombres.join(", ")))
+                )));
+                let _ = stdout.queue(ResetColor);
+            }
+        }
+    }
+
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
     let _ = stdout.queue(SetForegroundColor(Color::Green));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea())));
-    let _ = stdout.queue(Print("  ↑/↓ Seleccionar  Enter Usar  Esc Volver\r\n"));
+    let indicaciones = if fase == 0 {
+        "↑/↓ Elegir 1ª   Enter Confirmar   Esc Salir"
+    } else {
+        "↑/↓ Elegir 2ª   Enter Fusionar   Esc Cancelar"
+    };
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila(indicaciones))));
+    let _ = stdout.queue(SetForegroundColor(Color::Magenta));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
     let _ = stdout.queue(ResetColor);
     let _ = stdout.flush();
 }
@@ -252,10 +930,25 @@ pub fn render_game_over() {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
+    let calavera = [
+        "    .--------.    ",
+        "   /  o    o  \\   ",
+        "  |    ----    |  ",
+        "   \\    --    /   ",
+        "    '--------'    ",
+    ];
     let _ = stdout.queue(SetForegroundColor(Color::Red));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea_doble())));
-    let _ = stdout.queue(Print("  G A M E   O V E R\r\n"));
-    let _ = stdout.queue(Print(&format!("{}\r\n", linea_doble())));
+    for fila in calavera {
+        let _ = stdout.queue(Print(&format!("{}\r\n", fila)));
+    }
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila("  G A M E   O V E R"))));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("La Hora Oscura te ha vencido...")
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
     let _ = stdout.queue(ResetColor);
     let _ = stdout.queue(Print("\n  Presiona cualquier tecla para salir...\r\n"));
     let _ = stdout.flush();
@@ -271,24 +964,4 @@ pub fn leer_tecla() -> Option<KeyCode> {
             }
         }
     }
-}
-
-fn barra(actual: u32, maximo: u32, ancho: usize) -> String {
-    let porcentaje = if maximo > 0 {
-        actual as f32 / maximo as f32
-    } else {
-        0.0
-    };
-    let llenos = (porcentaje * ancho as f32).round() as usize;
-    let vacios = ancho.saturating_sub(llenos);
-    let mut resultado = String::with_capacity(ancho + 2);
-    resultado.push('[');
-    for _ in 0..llenos {
-        resultado.push('#');
-    }
-    for _ in 0..vacios {
-        resultado.push('.');
-    }
-    resultado.push(']');
-    resultado
 }
