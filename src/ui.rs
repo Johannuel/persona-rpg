@@ -44,7 +44,7 @@ pub fn render_titulo() {
     let _ = stdout.queue(ResetColor);
     let _ = stdout.queue(Print("\r\n"));
     let _ = stdout.queue(Print("  Un juego de RPG por turnos\r\n"));
-    let _ = stdout.queue(Print("  inspirado en Persona 3 Portable\r\n"));
+    let _ = stdout.queue(Print("  inspirado en Persona \r\n"));
     let _ = stdout.queue(Print("\r\n"));
     let _ = stdout.queue(SetForegroundColor(Color::Cyan));
     let _ = stdout.queue(Print("  Presiona cualquier tecla para comenzar\r\n"));
