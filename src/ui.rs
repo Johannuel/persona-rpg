@@ -231,18 +231,18 @@ fn sprite_persona(persona: &str) -> Vec<String> {
         "Pyro Jack" => sprite_enemigo("Pyro Jack"),
         "Pixie" => sprite_enemigo("Pixie"),
         "Orpheus" => sprite_art([
-            "  \\  /\\  /    ",
-            "   \\/  \\/     ",
-            "   / o  o \\   ",
-            "   \\  ^  /    ",
-            "    \\__/      ",
+            "    .---.",
+            "   | o  o |",
+            "   | ==== |",
+            "   |  ⌄   |",
+            "    \\___/",
         ]),
         _ => sprite_art([
-            "    .---.     ",
-            "   / o  o \\   ",
-            "  |   ~~~   | ",
-            "   \\_____/   ",
-            "  _/     \\_  ",
+            "    .---.",
+            "   / o  o \\",
+            "  |   ~~~   |",
+            "   \\_____/",
+            "  _/     \\_",
         ]),
     }
 }
