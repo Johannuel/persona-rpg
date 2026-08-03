@@ -5,7 +5,7 @@
 
 A turn-based RPG for the terminal, inspired by **Persona 3 Portable**. Fight shadows in Tartarus, collect Personas, fuse them in the Velvet Room, and survive the Dark Hour.
 
-Un RPG por turnos en la terminal inspirado en Persona 3 Portable. Combate, fusiona Personas y explora la Hora Oscura.
+
 
 ## Demo
 
