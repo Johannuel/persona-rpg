@@ -12,9 +12,6 @@ A turn-based RPG for the terminal, inspired by **Persona 3 Portable**. Fight sha
 <p align="center">
   <img src="videos/demo.gif" alt="Demo del juego — combate por turnos, fusión de Personas y Shuffle Time" width="100%">
 </p>
-
-<sub>GIF animado (72 s) · Video completo 1080p: [ver en GitHub](https://github.com/Johannuel/persona-rpg/blob/main/videos/demo.mp4) · [release demo-assets](https://github.com/Johannuel/persona-rpg/releases/tag/demo-assets)</sub>
-
 ## Features
 
 - **5 playable characters** — Makoto, Yukari, Junpei, Akihiko, Mitsuru, each with a signature Persona
