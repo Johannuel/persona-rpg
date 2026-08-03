@@ -33,7 +33,7 @@ fn main() {
     let mut fusion_fase = 0;
     let mut fusion_a: Option<usize> = None;
     let mut fusion_seleccion = 0;
-    let mut mensaje_exploracion = String::from("Estás en la calle. ¿Qué harás?");
+    let mut mensaje_exploracion = String::from("You're on the street. What will you do?");
 
     loop {
         match estado {
@@ -58,7 +58,7 @@ fn main() {
                     Some(KeyCode::Enter) => {
                         jugador = personajes[seleccion_personaje].clone();
                         mensaje_exploracion = format!(
-                            "{} despierta a su Persona: {}.",
+                            "{} awakens their Persona: {}.",
                             jugador.nombre, jugador.persona
                         );
                         estado = EstadoJuego::Explorando;
@@ -79,7 +79,7 @@ fn main() {
                     Some(KeyCode::Enter) => {
                         aplicar_persona(&mut jugador, &stock[seleccion_persona]);
                         mensaje_exploracion = format!(
-                            "{} invoca a su Persona: {}.",
+                            "{} summons their Persona: {}.",
                             jugador.nombre, jugador.persona
                         );
                         estado = EstadoJuego::Explorando;
@@ -104,7 +104,7 @@ fn main() {
                         jugador.hp = (jugador.hp + curacion).min(jugador.hp_max);
                         jugador.mp = (jugador.mp + 5).min(jugador.mp_max);
                         mensaje_exploracion =
-                            format!("Descansas y recuperas {} HP, 5 MP.", curacion);
+                            format!("You rest and recover {} HP and 5 MP.", curacion);
                     }
                     Some(KeyCode::Char('3')) if con_personas => {
                         seleccion_persona = 0;
@@ -145,7 +145,7 @@ fn main() {
                             ) {
                                 ResultadoTurno::Continua => {}
                                 ResultadoTurno::Huida => {
-                                    mensaje_exploracion = String::from("Escapaste del combate.");
+                                    mensaje_exploracion = String::from("You fled the battle.");
                                     estado = EstadoJuego::Explorando;
                                     estado_combate = None;
                                 }
@@ -210,7 +210,7 @@ fn main() {
                             if a != fusion_seleccion {
                                 let resultado = fusionar(&stock[a], &stock[fusion_seleccion]);
                                 mensaje_exploracion = format!(
-                                    "Elizabeth fusionó {} y {}: ¡{} ha nacido!",
+                                    "Elizabeth fused {} and {}: {} is born!",
                                     stock[a].persona,
                                     stock[fusion_seleccion].persona,
                                     resultado.persona
@@ -317,9 +317,9 @@ fn resolver_turno_del_jugador(
     if resultado == ResultadoTurno::Victoria {
         let subio = registrar_experiencia(combate);
         *mensaje_exploracion = if subio {
-            format!("¡Subiste a nivel {}!", combate.jugador.nivel)
+            format!("You leveled up to level {}!", combate.jugador.nivel)
         } else {
-            String::from("¡Derrotaste al enemigo!")
+            String::from("You defeated the enemy!")
         };
         *jugador = combate.jugador.clone();
     }

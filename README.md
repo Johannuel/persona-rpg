@@ -10,7 +10,7 @@ A turn-based RPG for the terminal, inspired by **Persona 3 Portable**. Fight sha
 ## 📸 Demo
 
 <p align="center">
-  <img src="videos/demo.gif" alt="Demo del juego — combate por turnos, fusión de Personas y Shuffle Time" width="100%">
+  <img src="videos/demo.gif" alt="Game demo — turn-based combat, Persona fusion and Shuffle Time" width="100%">
 </p>
 ## Features
 
@@ -25,38 +25,38 @@ A turn-based RPG for the terminal, inspired by **Persona 3 Portable**. Fight sha
 
 ## Screenshots
 
-Combat against a Pixie shadow in Tartarus:
+Combat against a Jack Frost shadow in Tartarus:
 
 ```text
 ┌────────────────────────────────────────────────────────────┐
-│   = = =   C O M B A T E   = = =                            │
+│   = = =   B A T T L E   = = =                              │
 ├────────────────────────────────────────────────────────────┤
-│   Pixie Nv.1  (Nv.1)  —  Sombra                            │
-│    /\   /\                                                 │
-│   ( o ) ( o )       HP [██████████████]  55/55             │
-│    \_/   \_/        Débil: Eléctrico  Resiste: Viento      │
-│     |  *  |                                                │
-│     |     |                                                │
+│   Jack Frost Lv.1  (Lv.1)  —  Shadow                        │
+│     ______                                                 │
+│    / o  o \         HP [██████████████]  65/65              │
+│    |  ^^  |         Weak: Fire  Resists: Ice               │
+│     \  __  /                                               │
+│      \____/                                                │
 ├────────────────────────────────────────────────────────────┤
-│   Makoto  (Nv.1)  —  Orpheus                               │
+│   Makoto  (Lv.1)  —  Orpheus                               │
 │   \  /\  /                                                 │
-│    \/  \/           HP [██████████████]  100/100           │
-│    / o  o \         MP [██████████████]  50/50             │
-│    \  ^  /          Débil: Eléctrico  Resiste: —           │
+│    \/  \/           HP [██████████████]  100/100            │
+│    / o  o \         MP [██████████████]  50/50              │
+│    \  ^  /          Weak: Electric  Resists: —              │
 │     \__/                                                   │
 ├────────────────────────────────────────────────────────────┤
-│   ── Registro ──                                           │
+│   ── Log ──                                                │
 ├────────────────────────────────────────────────────────────┤
-│ ¡Comienza el combate!                                      │
+│ The battle begins!                                         │
 ├────────────────────────────────────────────────────────────┤
-│   ── Acción ──                                             │
+│   ── Action ──                                             │
 ├────────────────────────────────────────────────────────────┤
-│   > Atacar <                                               │
-│     Habilidades                                            │
-│     Defender                                               │
-│     Huir                                                   │
+│   > Attack <                                               │
+│     Skills                                                 │
+│     Defend                                                 │
+│     Flee                                                   │
 ├────────────────────────────────────────────────────────────┤
-│ ↑/↓ mover   Enter elegir   q rendirse                      │
+│ ↑/↓ move   Enter choose   q surrender                      │
 └────────────────────────────────────────────────────────────┘
 ```
 
@@ -74,11 +74,11 @@ Title screen:
 │                                                            │
 │   *  *  *  P E R S O N A   R P G  *  *  *                  │
 │                                                            │
-│   Un RPG por turnos inspirado en Persona 3                 │
-│   La Hora Oscura te espera...                              │
+│   A turn-based RPG inspired by Persona 3                   │
+│   The Dark Hour awaits you...                              │
 └────────────────────────────────────────────────────────────┘
-  Presiona cualquier tecla para comenzar
-  o 'q' para salir
+  Press any key to start
+  or 'q' to quit
 ```
 
 ## Run

@@ -13,12 +13,12 @@ pub fn iniciar_combate(jugador: &Personaje, enemigo: Enemigo) -> EstadoCombate {
         buff_defensa: 0,
         debuff_ataque: 0,
         debuff_defensa: 0,
-        registro: vec![String::from("¡Comienza el combate!")],
+        registro: vec![String::from("The battle begins!")],
         opciones: vec![
-            String::from("Atacar"),
-            String::from("Habilidades"),
-            String::from("Defender"),
-            String::from("Huir"),
+            String::from("Attack"),
+            String::from("Skills"),
+            String::from("Defend"),
+            String::from("Flee"),
         ],
         seleccion_actual: 0,
     }
@@ -65,16 +65,16 @@ pub fn ejecutar_accion_jugador(
             estado.enemigo.personaje.hp = estado.enemigo.personaje.hp.saturating_sub(dano);
             estado
                 .registro
-                .push(format!("{} golpea por {} de daño!", nombre_jugador, dano));
+                .push(format!("{} strikes for {} damage!", nombre_jugador, dano));
             registrar_resultado_golpe(estado, &golpe, &nombre_enemigo);
         }
         AccionJugador::Habilidad(idx) => {
             let Some(habilidad) = estado.jugador.habilidades.get(*idx).cloned() else {
-                estado.registro.push(String::from("Habilidad inválida"));
+                estado.registro.push(String::from("Invalid skill"));
                 return ResultadoAccion::NoValida;
             };
             if estado.jugador.mp < habilidad.coste_mp {
-                estado.registro.push(String::from("MP insuficiente"));
+                estado.registro.push(String::from("Not enough MP"));
                 return ResultadoAccion::NoValida;
             }
             estado.jugador.mp -= habilidad.coste_mp;
@@ -84,15 +84,15 @@ pub fn ejecutar_accion_jugador(
         AccionJugador::Defender => {
             estado
                 .registro
-                .push(format!("{} se defiende", estado.jugador.nombre));
+                .push(format!("{} defends", estado.jugador.nombre));
             estado.defendiendo = true;
         }
         AccionJugador::Huir => {
             if rand::thread_rng().gen_bool(0.5) {
-                estado.registro.push(String::from("¡Huiste con éxito!"));
+                estado.registro.push(String::from("You fled successfully!"));
                 return ResultadoAccion::Huida;
             }
-            estado.registro.push(String::from("¡No pudiste escapar!"));
+            estado.registro.push(String::from("You couldn't escape!"));
         }
     }
     ResultadoAccion::Realizada
@@ -112,7 +112,7 @@ fn aplicar_habilidad(usuario: &str, habilidad: &Skill, estado: &mut EstadoCombat
             );
             estado.enemigo.personaje.hp = estado.enemigo.personaje.hp.saturating_sub(dano);
             estado.registro.push(format!(
-                "{}{} usa {} y causa {} de daño!",
+                "{}{} uses {} and deals {} damage!",
                 etiqueta_dano(habilidad.elemento),
                 usuario,
                 habilidad.nombre,
@@ -124,35 +124,35 @@ fn aplicar_habilidad(usuario: &str, habilidad: &Skill, estado: &mut EstadoCombat
             let curacion = (estado.jugador.hp_max as f32 * habilidad.multiplicador_dano) as u32;
             estado.jugador.hp = (estado.jugador.hp + curacion).min(estado.jugador.hp_max);
             estado.registro.push(format!(
-                "{} usa {} y recupera {} HP!",
+                "{} uses {} and recovers {} HP!",
                 usuario, habilidad.nombre, curacion
             ));
         }
         Efecto::BuffAtaque => {
             estado.buff_ataque = 3;
             estado.registro.push(format!(
-                "{} usa {} y sube su ataque!",
+                "{} uses {} and raises its attack!",
                 usuario, habilidad.nombre
             ));
         }
         Efecto::BuffDefensa => {
             estado.buff_defensa = 3;
             estado.registro.push(format!(
-                "{} usa {} y sube su defensa!",
+                "{} uses {} and raises its defense!",
                 usuario, habilidad.nombre
             ));
         }
         Efecto::DebuffAtaque => {
             estado.debuff_ataque = 3;
             estado.registro.push(format!(
-                "{} baja el ataque del enemigo con {}!",
+                "{} lowers the enemy's attack with {}!",
                 usuario, habilidad.nombre
             ));
         }
         Efecto::DebuffDefensa => {
             estado.debuff_defensa = 3;
             estado.registro.push(format!(
-                "{} baja la defensa del enemigo con {}!",
+                "{} lowers the enemy's defense with {}!",
                 usuario, habilidad.nombre
             ));
         }
@@ -199,7 +199,7 @@ pub fn turno_enemigo(estado: &mut EstadoCombate) {
                 );
                 estado.jugador.hp = estado.jugador.hp.saturating_sub(dano);
                 estado.registro.push(format!(
-                    "{}{} usa {} y causa {} de daño!",
+                    "{}{} uses {} and deals {} damage!",
                     etiqueta_dano(habilidad.elemento),
                     nombre_enemigo,
                     habilidad.nombre,
@@ -213,14 +213,14 @@ pub fn turno_enemigo(estado: &mut EstadoCombate) {
                 estado.enemigo.personaje.hp =
                     (estado.enemigo.personaje.hp + curacion).min(estado.enemigo.personaje.hp_max);
                 estado.registro.push(format!(
-                    "{} usa {} y recupera {} HP!",
+                    "{} uses {} and recovers {} HP!",
                     nombre_enemigo, habilidad.nombre, curacion
                 ));
             }
             Efecto::DebuffDefensa => {
                 estado.debuff_defensa_jugador = 3;
                 estado.registro.push(format!(
-                    "¡{} reduce la defensa de {}!",
+                    "{} lowers {}'s defense!",
                     nombre_enemigo, estado.jugador.nombre
                 ));
             }
@@ -230,7 +230,7 @@ pub fn turno_enemigo(estado: &mut EstadoCombate) {
         let dano = calcular_dano(ataque_enemigo(estado), defensa_jugador(estado), 1.0);
         estado.jugador.hp = estado.jugador.hp.saturating_sub(dano);
         estado.registro.push(format!(
-            "{} ataca y causa {} de daño!",
+            "{} attacks and deals {} damage!",
             nombre_enemigo, dano
         ));
     }
@@ -341,11 +341,11 @@ fn registrar_resultado_golpe(estado: &mut EstadoCombate, golpe: &ResultadoGolpe,
     match golpe {
         ResultadoGolpe::Debil => estado
             .registro
-            .push(format!("¡{} es débil! ¡Daño crítico!", objetivo)),
+            .push(format!("{} is weak! Critical hit!", objetivo)),
         ResultadoGolpe::Resistido => {
             estado
                 .registro
-                .push(format!("¡{} resiste este ataque!", objetivo));
+                .push(format!("{} resists this attack!", objetivo));
         }
         ResultadoGolpe::Normal => {}
     }
@@ -362,7 +362,7 @@ fn etiqueta_dano(elemento: Elemento) -> String {
 pub fn registrar_experiencia(estado: &mut EstadoCombate) -> bool {
     let exp_ganada = 10 + estado.enemigo.personaje.nivel * 5;
     estado.jugador.experiencia += exp_ganada;
-    estado.registro.push(format!("+{} experiencia", exp_ganada));
+    estado.registro.push(format!("+{} experience", exp_ganada));
     subir_nivel(&mut estado.jugador)
 }
 
@@ -374,8 +374,8 @@ mod tests {
     fn enemigo_prueba(hp: u32) -> Enemigo {
         Enemigo {
             personaje: Personaje {
-                nombre: String::from("Muñeco de prueba"),
-                persona: String::from("Sombra de prueba"),
+                nombre: String::from("Test dummy"),
+                persona: String::from("Test shadow"),
                 arcana: None,
                 hp,
                 hp_max: 100,
@@ -389,7 +389,7 @@ mod tests {
                     nombre: String::from("Golpe de prueba"),
                     coste_mp: 0,
                     multiplicador_dano: 1.0,
-                    descripcion: String::from("Golpe básico"),
+                    descripcion: String::from("Basic strike"),
                     elemento: Elemento::Fisico,
                     efecto: Efecto::Danio,
                 }],
