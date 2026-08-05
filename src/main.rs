@@ -1,5 +1,6 @@
 mod combat;
 mod data;
+mod save;
 mod ui;
 
 use crate::combat::{
@@ -7,15 +8,19 @@ use crate::combat::{
     ResultadoTurno,
 };
 use crate::data::{
-    aplicar_carta, crear_personajes, enemigo_aleatorio, fusionar, generar_cartas, persona_orfeo,
-    AccionJugador, CartaShuffle, EstadoCombate, EstadoJuego, Personaje,
+    aplicar_carta, crear_boss, crear_personajes, enemigo_aleatorio, fusionar, generar_cartas,
+    persona_orfeo, AccionJugador, CartaShuffle, EstadoCombate, EstadoJuego, Personaje, PISO_TOTAL,
 };
+use crate::save::{cargar, existe, guardar};
 use crate::ui::{
     leer_tecla, limpiar_pantalla, mostrar_cursor, ocultar_cursor, render_combate,
     render_exploracion, render_fusion, render_game_over, render_habilidades,
     render_seleccion_persona, render_seleccion_personaje, render_shuffle_time, render_titulo,
+    render_victoria,
 };
 use crossterm::{event::KeyCode, terminal};
+
+const RUTA_SAVE: &str = "save.bin";
 
 fn main() {
     terminal::enable_raw_mode().unwrap();
@@ -24,6 +29,8 @@ fn main() {
     let personajes = crear_personajes();
     let mut jugador = crear_personajes().remove(0);
     let mut stock = vec![persona_orfeo()];
+    let mut piso = 1;
+    let mut en_combate_jefe = false;
     let mut seleccion_personaje = 0;
     let mut seleccion_persona = 0;
     let mut estado_combate: Option<EstadoCombate> = None;
@@ -38,9 +45,21 @@ fn main() {
     loop {
         match estado {
             EstadoJuego::Titulo => {
-                render_titulo();
+                render_titulo(existe(RUTA_SAVE));
                 match leer_tecla() {
                     Some(KeyCode::Char('q')) | None => break,
+                    Some(KeyCode::Char('l')) if existe(RUTA_SAVE) => {
+                        if let Ok((j, s, p)) = cargar(RUTA_SAVE) {
+                            jugador = j;
+                            stock = s;
+                            piso = p;
+                            mensaje_exploracion = format!(
+                                "Welcome back, {}. You're on Tartarus floor {}.",
+                                jugador.nombre, piso
+                            );
+                            estado = EstadoJuego::Explorando;
+                        }
+                    }
                     Some(_) => estado = EstadoJuego::SeleccionPersonaje,
                 }
             }
@@ -92,11 +111,31 @@ fn main() {
             EstadoJuego::Explorando => {
                 let con_personas = jugador.nombre == "Makoto";
                 let con_fusion = con_personas && stock.len() >= 2;
-                render_exploracion(&jugador, &mensaje_exploracion, con_personas, con_fusion);
+                render_exploracion(
+                    &jugador,
+                    &mensaje_exploracion,
+                    piso,
+                    con_personas,
+                    con_fusion,
+                );
                 match leer_tecla() {
                     Some(KeyCode::Char('1')) => {
-                        let enemigo = enemigo_aleatorio(jugador.nivel);
-                        estado_combate = Some(iniciar_combate(&jugador, enemigo));
+                        if piso >= PISO_TOTAL {
+                            en_combate_jefe = true;
+                            estado_combate =
+                                Some(iniciar_combate(&jugador, crear_boss(jugador.nivel)));
+                            mensaje_exploracion =
+                                String::from("A fearsome Floor Boss bars the way to the top.");
+                        } else {
+                            en_combate_jefe = false;
+                            piso += 1;
+                            let enemigo = enemigo_aleatorio(jugador.nivel);
+                            estado_combate = Some(iniciar_combate(&jugador, enemigo));
+                            mensaje_exploracion = format!(
+                                "You descend to Tartarus floor {}. A shadow blocks your path!",
+                                piso
+                            );
+                        }
                         estado = EstadoJuego::Combate;
                     }
                     Some(KeyCode::Char('2')) => {
@@ -115,6 +154,13 @@ fn main() {
                         fusion_a = None;
                         fusion_seleccion = 0;
                         estado = EstadoJuego::Fusion;
+                    }
+                    Some(KeyCode::Char('s')) => {
+                        let resultado = guardar(RUTA_SAVE, &jugador, &stock, piso);
+                        mensaje_exploracion = match resultado {
+                            Ok(_) => format!("Game saved in {} at floor {}.", RUTA_SAVE, piso),
+                            Err(e) => format!("Couldn't save the game: {}", e),
+                        };
                     }
                     Some(KeyCode::Char('q')) => break,
                     _ => {}
@@ -150,11 +196,17 @@ fn main() {
                                     estado_combate = None;
                                 }
                                 ResultadoTurno::Victoria => {
-                                    let nivel = combate.jugador.nivel;
-                                    estado_combate = None;
-                                    cartas = generar_cartas(nivel);
-                                    seleccion_shuffle = 0;
-                                    estado = EstadoJuego::ShuffleTime;
+                                    if en_combate_jefe {
+                                        estado_combate = None;
+                                        en_combate_jefe = false;
+                                        estado = EstadoJuego::Victoria;
+                                    } else {
+                                        let nivel = combate.jugador.nivel;
+                                        estado_combate = None;
+                                        cartas = generar_cartas(nivel);
+                                        seleccion_shuffle = 0;
+                                        estado = EstadoJuego::ShuffleTime;
+                                    }
                                 }
                                 ResultadoTurno::Derrota => {
                                     estado = EstadoJuego::GameOver;
@@ -264,11 +316,17 @@ fn main() {
                                 ResultadoTurno::Continua => estado = EstadoJuego::Combate,
                                 ResultadoTurno::Huida => {}
                                 ResultadoTurno::Victoria => {
-                                    let nivel = combate.jugador.nivel;
-                                    estado_combate = None;
-                                    cartas = generar_cartas(nivel);
-                                    seleccion_shuffle = 0;
-                                    estado = EstadoJuego::ShuffleTime;
+                                    if en_combate_jefe {
+                                        estado_combate = None;
+                                        en_combate_jefe = false;
+                                        estado = EstadoJuego::Victoria;
+                                    } else {
+                                        let nivel = combate.jugador.nivel;
+                                        estado_combate = None;
+                                        cartas = generar_cartas(nivel);
+                                        seleccion_shuffle = 0;
+                                        estado = EstadoJuego::ShuffleTime;
+                                    }
                                 }
                                 ResultadoTurno::Derrota => {
                                     estado = EstadoJuego::GameOver;
@@ -283,6 +341,11 @@ fn main() {
             }
             EstadoJuego::GameOver => {
                 render_game_over();
+                let _ = leer_tecla();
+                break;
+            }
+            EstadoJuego::Victoria => {
+                render_victoria(&jugador, PISO_TOTAL);
                 let _ = leer_tecla();
                 break;
             }

@@ -82,7 +82,7 @@ pub enum Efecto {
     DebuffDefensa,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Skill {
     pub nombre: String,
     pub coste_mp: u32,
@@ -110,7 +110,7 @@ fn skill(
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Personaje {
     pub nombre: String,
     pub persona: String,
@@ -144,6 +144,7 @@ pub enum EstadoJuego {
     Combate,
     SeleccionHabilidad,
     GameOver,
+    Victoria,
 }
 
 #[derive(Clone, Debug)]
@@ -1659,6 +1660,83 @@ pub fn enemigo_aleatorio(nivel: u32) -> Enemigo {
     enemigos[rng.gen_range(0..enemigos.len())].clone()
 }
 
+pub const PISO_TOTAL: u32 = 5;
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "constructor de datos de jefes con una fila por jefe"
+)]
+fn jefe_nivel(
+    nombre: &str,
+    nivel: u32,
+    mod_hp: u32,
+    mod_atk: u32,
+    mod_def: u32,
+    mod_mp: u32,
+    habilidades: Vec<Skill>,
+    debilidades: Vec<Elemento>,
+    resistencias: Vec<Elemento>,
+) -> Enemigo {
+    let hp = 50 + nivel * 28 + mod_hp;
+    Enemigo {
+        personaje: Personaje {
+            nombre: format!("{} Lv.{}", nombre, nivel),
+            persona: String::from("Floor Boss"),
+            arcana: None,
+            hp,
+            hp_max: hp,
+            mp: 30 + mod_mp,
+            mp_max: 30 + mod_mp,
+            ataque: 8 + nivel * 4 + mod_atk,
+            defensa: 5 + nivel * 3 + mod_def,
+            nivel,
+            experiencia: 0,
+            habilidades,
+            debilidades,
+            resistencias,
+        },
+    }
+}
+
+pub fn crear_boss(nivel: u32) -> Enemigo {
+    jefe_nivel(
+        "Guillotine",
+        nivel,
+        0,
+        5,
+        3,
+        30,
+        vec![
+            skill(
+                "Maragi",
+                8,
+                1.3,
+                "Fire over everyone",
+                Elemento::Fuego,
+                Efecto::Danio,
+            ),
+            skill(
+                "Mabufu",
+                8,
+                1.3,
+                "Frost over everyone",
+                Elemento::Hielo,
+                Efecto::Danio,
+            ),
+            skill(
+                "Media",
+                12,
+                0.4,
+                "Restores 40% of its own HP",
+                Elemento::Fisico,
+                Efecto::Curacion,
+            ),
+        ],
+        vec![Elemento::Viento],
+        vec![Elemento::Fuego, Elemento::Hielo],
+    )
+}
+
 pub fn exp_para_nivel(nivel: u32) -> u32 {
     nivel * 25
 }
@@ -1714,6 +1792,22 @@ mod tests {
         let nivel_5 = crear_enemigos_nivel(5);
         assert!(nivel_5[0].personaje.hp_max > nivel_1[0].personaje.hp_max);
         assert!(nivel_5[0].personaje.ataque > nivel_1[0].personaje.ataque);
+    }
+
+    #[test]
+    fn boss_siempre_debe_ser_mas_fuerte_que_un_sombra_normal() {
+        let boss = crear_boss(5);
+        let sombra = crear_enemigos_nivel(5)
+            .into_iter()
+            .max_by_key(|e| e.personaje.hp_max)
+            .unwrap();
+        assert!(boss.personaje.hp_max > sombra.personaje.hp_max);
+        assert!(boss.personaje.ataque > sombra.personaje.ataque);
+        assert!(boss
+            .personaje
+            .habilidades
+            .iter()
+            .any(|h| h.nombre == "Media"));
     }
 
     #[test]
