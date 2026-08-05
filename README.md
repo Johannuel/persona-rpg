@@ -32,6 +32,8 @@ Fight shadows in Tartarus, collect Personas, fuse them in the Velvet Room, and s
 - 👾 **16+ Tartarus shadows** scaled to your level, with weaknesses, resistances, buffs and debuffs
 - 🎨 **ASCII-art sprites**, colored HP/MP bars, and a colored combat log
 - 📈 **Leveling** — gain EXP, grow stats, up to level 20
+- 🗼 **Tartarus floors** — descend 5 floors; a **Floor Boss** (Guillotine) guards the top, weak to Wind and resistant to Fire/Ice
+- **Save game** — save to `save.bin` anytime and load it back from the title screen
 
 ## Screenshots
 
@@ -111,19 +113,22 @@ Requires a terminal with UTF-8 support. Tested on Linux with crossterm.
 |---|---|---|
 | Menus | `↑` / `↓` | Move selection |
 | Menus | `Enter` | Confirm |
-| Exploration | `1` | Advance into Tartarus (random encounter) |
+| Exploration | `1` | Descend into Tartarus (shadow encounter; on the last floor, face the Boss) |
 | Exploration | `2` | Rest: recover HP and MP |
 | Exploration | `3` | Change Persona (Makoto only) |
 | Exploration | `4` | Fusion: Velvet Room (Makoto only) |
+| Exploration | `s` | Save the game to `save.bin` |
+| Title | `l` | Load the saved game (if present) |
 | Combat | `↑` / `↓` + `Enter` | Attack, skills, defend, flee |
 | Anywhere | `q` | Quit |
 
 ## Structure
 
 - `src/main.rs` — entry point, game loop, state machine
-- `src/data.rs` — characters, personas, enemies, skills, fusion, shuffle cards
+- `src/data.rs` — characters, personas, enemies, skills, fusion, shuffle cards, bosses
 - `src/combat.rs` — turn-based combat, damage, leveling
-- `src/ui.rs` — crossterm rendering (title, exploration, combat, shuffle, fusion)
+- `src/ui.rs` — crossterm rendering (title, exploration, combat, shuffle, fusion, victory)
+- `src/save.rs` — save and load the game to/from disk
 
 ## Tests
 
@@ -131,12 +136,12 @@ Requires a terminal with UTF-8 support. Tested on Linux with crossterm.
 cargo test
 ```
 
-22 unit tests covering combat, elemental damage, leveling, fusion and shuffle cards.
+26 unit tests covering combat, elemental damage, leveling, fusion, shuffle cards, bosses and save/load.
 
 ## Roadmap
 
 - [x] Turn-based combat with elemental weaknesses
 - [x] Persona fusion (Velvet Room) and Shuffle Time rewards
-- [ ] Tartarus floors with a boss
+- [x] Tartarus floors with a boss
+- [x] Save game
 - [ ] Full moon events
-- [ ] Save game
