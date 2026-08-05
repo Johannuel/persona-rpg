@@ -30,12 +30,15 @@ Fight shadows in Tartarus, collect Personas, fuse them in the Velvet Room, and s
 - 🃏 **Shuffle Time** — after every victory, pick one of three cards: a new Persona, HP/MP recovery, or bonus EXP
 - ⚡ **Elemental combat** — 5 elements; hit a weakness for a critical, resist to halve
 - 👾 **16+ Tartarus shadows** scaled to your level, with weaknesses, resistances, buffs and debuffs
+- 🎨 **Persona 3 "Dark Hour" palette** — RGB colors for elements, arcana, party members, sprites and the night sky, all in one module
 - 🎨 **ASCII-art sprites**, colored HP/MP bars, and a colored combat log
 - 📈 **Leveling** — gain EXP, grow stats, up to level 20
 - 🗼 **Tartarus floors** — descend 5 floors; a **Floor Boss** (Guillotine) guards the top, weak to Wind and resistant to Fire/Ice
 - **Save game** — save to `save.bin` anytime and load it back from the title screen
 
 ## Screenshots
+
+> Note: the ASCII art below predates the Persona 3 "Dark Hour" palette update — borders are now blue and elements/arcana/party members are color-coded.
 
 Combat against a Pyro Jack shadow in Tartarus:
 
@@ -105,7 +108,7 @@ Title screen:
 cargo run
 ```
 
-Requires a terminal with UTF-8 support. Tested on Linux with crossterm.
+Requires a terminal with UTF-8 and **truecolor (24-bit)** support. Tested on Linux with crossterm.
 
 ## Controls
 
@@ -127,6 +130,7 @@ Requires a terminal with UTF-8 support. Tested on Linux with crossterm.
 - `src/main.rs` — entry point, game loop, state machine
 - `src/data.rs` — characters, personas, enemies, skills, fusion, shuffle cards, bosses
 - `src/combat.rs` — turn-based combat, damage, leveling
+- `src/paleta.rs` — Persona 3 "Dark Hour" color palette (RGB colors, elements, arcana, sprites)
 - `src/ui.rs` — crossterm rendering (title, exploration, combat, shuffle, fusion, victory)
 - `src/save.rs` — save and load the game to/from disk
 

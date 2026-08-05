@@ -1,5 +1,6 @@
 mod combat;
 mod data;
+mod paleta;
 mod save;
 mod ui;
 
