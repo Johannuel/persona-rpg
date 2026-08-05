@@ -145,3 +145,4 @@ cargo test
 - [x] Tartarus floors with a boss
 - [x] Save game
 - [ ] Full moon events
+- [ ] Rewrite the TUI with Ratatui (crossterm stays as the backend)
