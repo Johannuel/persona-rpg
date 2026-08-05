@@ -9,7 +9,9 @@ use crossterm::{
 use std::io::{self, Write};
 use std::sync::OnceLock;
 
-use crate::data::{fusionar, CartaShuffle, Efecto, Elemento, EstadoCombate, Personaje, Skill};
+use crate::data::{
+    fusionar, CartaShuffle, Efecto, Elemento, EstadoCombate, Personaje, Skill, PISO_TOTAL,
+};
 
 const ANCHO: usize = 60;
 const ANCHO_INTERIOR: usize = ANCHO - 2;
@@ -108,6 +110,7 @@ fn sprite_color_enemigo(nombre: &str) -> Color {
         "Chimera" => Color::Yellow,
         "Weeping Tiara" => Color::Cyan,
         "Lilim" => Color::Yellow,
+        "Guillotine" => Color::Red,
         _ => Color::DarkGrey,
     }
 }
@@ -214,6 +217,13 @@ fn sprite_enemigo(nombre: &str) -> Vec<String> {
             "  (  ⌄⌄  )",
             "  (_______)",
             "    / | \\",
+        ]),
+        "Guillotine" => sprite_art([
+            "    _  __  _",
+            "   / \\/  \\/ \\",
+            "  |   ⌄⌄   |",
+            "  |  ⌄⌄⌄  |",
+            "  |_     _|",
         ]),
         _ => sprite_art([
             "    .---.",
@@ -377,11 +387,12 @@ fn luna_titulo(stdout: &mut (impl Write + QueueableCommand)) {
     let _ = stdout.queue(ResetColor);
 }
 
-pub fn render_titulo() {
+pub fn render_titulo(con_save: bool) {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
-    mover_contenido(&mut stdout, 18);
+    let lineas = if con_save { 20 } else { 18 };
+    mover_contenido(&mut stdout, lineas);
     luna_titulo(&mut stdout);
     let _ = stdout.queue(Print("\r\n"));
 
@@ -410,6 +421,14 @@ pub fn render_titulo() {
         "{}\r\n",
         texto_margen("Press any key to start")
     )));
+    if con_save {
+        let _ = stdout.queue(SetForegroundColor(Color::Green));
+        let _ = stdout.queue(Print(&format!(
+            "{}\r\n",
+            texto_margen("'l' to load your saved game")
+        )));
+    }
+    let _ = stdout.queue(SetForegroundColor(Color::DarkGrey));
     let _ = stdout.queue(Print(&format!("{}\r\n", texto_margen("or 'q' to quit"))));
     let _ = stdout.queue(ResetColor);
     let _ = stdout.flush();
@@ -531,13 +550,14 @@ pub fn render_seleccion_persona(personas: &[Personaje], seleccion: usize) {
 pub fn render_exploracion(
     jugador: &Personaje,
     mensaje: &str,
+    piso: u32,
     con_personas: bool,
     con_fusion: bool,
 ) {
     limpiar_pantalla();
     let mut stdout = io::stdout();
 
-    mover_contenido(&mut stdout, 16);
+    mover_contenido(&mut stdout, 17);
     escena_nocturna(&mut stdout);
 
     let _ = stdout.queue(SetForegroundColor(Color::Cyan));
@@ -545,8 +565,15 @@ pub fn render_exploracion(
     let _ = stdout.queue(Print(&format!(
         "{}\r\n",
         caja_fila(&format!(
-            "{}  ·  {}   |   Lv.{}   |   Exp: {}",
+            "{} · {}  |  Lv.{}  Exp: {}",
             jugador.nombre, jugador.persona, jugador.nivel, jugador.experiencia
+        ))
+    )));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila(&format!(
+            "Location: Tartarus — Floor {}/{}",
+            piso, PISO_TOTAL
         ))
     )));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
@@ -586,24 +613,34 @@ pub fn render_exploracion(
     let _ = stdout.queue(ResetColor);
 
     let _ = stdout.queue(SetForegroundColor(Color::Green));
+    let avanzar = if piso >= PISO_TOTAL {
+        "[1] Face the Boss"
+    } else {
+        "[1] Descend"
+    };
     if con_personas {
         if con_fusion {
             let _ = stdout.queue(Print(&format!(
                 "{}\r\n",
-                caja_fila("[1] Advance   [2] Rest   [3] Persona   [4] Fuse")
+                caja_fila(&format!(
+                    "{} [2] Rest [3] Persona [4] Fuse [s] Save",
+                    avanzar
+                ))
             )));
         } else {
             let _ = stdout.queue(Print(&format!(
                 "{}\r\n",
-                caja_fila("[1] Advance   [2] Rest   [3] Persona   [q] Quit")
+                caja_fila(&format!("{} [2] Rest [3] Persona [s] Save", avanzar))
             )));
         }
     } else {
         let _ = stdout.queue(Print(&format!(
             "{}\r\n",
-            caja_fila("[1] Advance   [2] Rest   [q] Quit")
+            caja_fila(&format!("{} [2] Rest [s] Save", avanzar))
         )));
     }
+    let _ = stdout.queue(SetForegroundColor(Color::DarkGrey));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_fila("press q to quit"))));
     let _ = stdout.queue(SetForegroundColor(Color::Cyan));
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
     let _ = stdout.queue(ResetColor);
@@ -1015,6 +1052,57 @@ pub fn render_game_over() {
     let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
     let _ = stdout.queue(ResetColor);
     let _ = stdout.queue(Print("\n"));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        texto_margen("Press any key to exit...")
+    )));
+    let _ = stdout.flush();
+}
+
+pub fn render_victoria(jugador: &Personaje, pisos: u32) {
+    limpiar_pantalla();
+    let mut stdout = io::stdout();
+
+    mover_contenido(&mut stdout, 14);
+    let sol = [
+        "     ______",
+        "   .-      -.",
+        "  /    ..    \\",
+        " |   .    .   |",
+        " |  .      .  |",
+        "  \\    ..    /",
+        "   '-.____.-'",
+    ];
+    let _ = stdout.queue(SetForegroundColor(Color::Yellow));
+    for fila in sol {
+        let _ = stdout.queue(Print(&format!("{}\r\n", texto_margen(fila))));
+    }
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_superior())));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila("  T A R T A R U S   C O N Q U E R E D")
+    )));
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_medio())));
+    let _ = stdout.queue(ResetColor);
+
+    let _ = stdout.queue(SetForegroundColor(Color::Green));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila(&format!(
+            "{} defeated the Floor Boss and sealed the Dark Hour!",
+            jugador.nombre
+        ))
+    )));
+    let _ = stdout.queue(Print(&format!(
+        "{}\r\n",
+        caja_fila(&format!(
+            "Final stats: Lv.{} · {} EXP · {} floors cleared",
+            jugador.nivel, jugador.experiencia, pisos
+        ))
+    )));
+    let _ = stdout.queue(ResetColor);
+
+    let _ = stdout.queue(Print(&format!("{}\r\n", caja_inferior())));
     let _ = stdout.queue(Print(&format!(
         "{}\r\n",
         texto_margen("Press any key to exit...")
