@@ -55,7 +55,8 @@ Always load and apply these skills when their descriptions match the task:
 ## Notes
 
 - `origin/main` points to a different project (KWGT-hub). This repo is a new direction.
-- No CI yet — unit tests live in `src/combat.rs` and `src/data.rs` under `#[cfg(test)]`.
+- CI via GitHub Actions (`.github/workflows/ci.yml`): `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test` on every push/PR.
+- Unit tests live in `src/combat.rs` and `src/data.rs` under `#[cfg(test)]`.
 - The game uses crossterm for terminal manipulation (screen clearing, colors, input).
 - Raw mode is enabled for proper arrow key detection.
 - Combat is turn-based: player chooses Attack, Skill, Defend, or Flee.
