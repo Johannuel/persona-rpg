@@ -10,7 +10,7 @@
 
 ⭐ If you like this project, star it on GitHub!
 
-[Demo](#-demo) • [Features](#features) • [Screenshots](#screenshots) • [Run](#run) • [Controls](#controls) • [Roadmap](#roadmap)
+[Demo](#-demo) • [Features](#features) • [Screenshots](#screenshots) • [Run](#run) • [Controls](#controls) • [Roadmap](#roadmap) • [Contributing](#contributing)
 
 </div>
 
@@ -25,16 +25,16 @@ Fight shadows in Tartarus, collect Personas, fuse them in the Velvet Room, and s
 ## Features
 
 - 🎭 **5 playable characters** — Makoto, Yukari, Junpei, Akihiko, Mitsuru, each with a signature Persona
-- 🗡️ **17 collectible Personas** with their P3 arcana: Orpheus, Jack Frost, Pyro Jack, Pixie, Hua Po...
+- 🗡️ **16 collectible Personas** with their P3 arcana: Orpheus, Pixie, Jack Frost, Pyro Jack, Forneus, Hua Po...
 - 💠 **Velvet Room fusion** — combine two Personas (P3 arcana chart, skill inheritance, level math)
 - 🃏 **Shuffle Time** — after every victory, pick one of three cards: a new Persona, HP/MP recovery, or bonus EXP
 - ⚡ **Elemental combat** — 5 elements; hit a weakness for a critical, resist to halve
-- 👾 **16+ Tartarus shadows** scaled to your level, with weaknesses, resistances, buffs and debuffs
+- 👾 **13 Tartarus shadows** scaled to your level, plus a **Floor Boss**, with weaknesses, resistances, buffs and debuffs
 - 🎨 **Persona 3 "Dark Hour" palette** — RGB colors for elements, arcana, party members, sprites and the night sky, all in one module
 - 🎨 **ASCII-art sprites**, colored HP/MP bars, and a colored combat log
 - 📈 **Leveling** — gain EXP, grow stats, up to level 20
-- 🗼 **Tartarus floors** — descend 5 floors; a **Floor Boss** (Guillotine) guards the top, weak to Wind and resistant to Fire/Ice
-- **Save game** — save to `save.bin` anytime and load it back from the title screen
+- 🗼 **Tartarus floors** — descend 5 floors; the Floor Boss (HMS Guillotine) guards the top
+- 💾 **Save game** — save to `save.bin` anytime and load it back from the title screen
 
 ## Screenshots
 
@@ -104,11 +104,20 @@ Title screen:
 
 ## Run
 
+Requires [Rust](https://www.rust-lang.org) 1.81+, a UTF-8 terminal with **truecolor (24-bit)** support, and `crossterm` + `rand` (pulled automatically). Tested on Linux.
+
 ```bash
-cargo run
+cargo build --release    # compiles the game
+cargo run                # starts it
 ```
 
-Requires a terminal with UTF-8 and **truecolor (24-bit)** support. Tested on Linux with crossterm.
+Or run the tests to check the current build:
+
+```bash
+cargo test
+```
+
+Out of the box the game writes its save to `<project-dir>/save.bin`. Type `q` at any time to leave, `l` on the title screen to load a save, `s` while exploring to save.
 
 ## Controls
 
@@ -126,6 +135,8 @@ Requires a terminal with UTF-8 and **truecolor (24-bit)** support. Tested on Lin
 | Anywhere | `q` | Quit |
 
 ## Structure
+
+The whole game lives in six flat modules, one job each:
 
 - `src/main.rs` — entry point, game loop, state machine
 - `src/data.rs` — characters, personas, enemies, skills, fusion, shuffle cards, bosses
@@ -148,5 +159,11 @@ cargo test
 - [x] Persona fusion (Velvet Room) and Shuffle Time rewards
 - [x] Tartarus floors with a boss
 - [x] Save game
-- [ ] Full moon events
+- [x] Persona 3 "Dark Hour" color palette
 - [ ] Rewrite the TUI with Ratatui (crossterm stays as the backend)
+- [ ] Full moon events
+- [ ] Bug fixes and cleanups tracked in the [issue tracker](https://github.com/Johannuel/persona-rpg/issues)
+
+## Contributing
+
+Found a bug or want a feature? Open an [issue](https://github.com/Johannuel/persona-rpg/issues). Small, well-tested PRs are welcome — run `cargo test` and `cargo clippy` first. See `AGENTS.md` for the project's coding conventions.
